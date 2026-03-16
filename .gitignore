@@ -45,3 +45,7 @@ yarn.lock
 package-lock.json
 packages/*/yarn.lock
 packages/*/package-lock.json
+
+# Allow Unity WebGL build
+!packages/react-app/public/game/Build/
+!packages/react-app/public/game/Build/*

@@ -44,35 +44,50 @@ export default function Home() {
     // =========================
     async function handlePayment() {
 
-        if (!window.ethereum) {
-            alert("MiniPay wallet not detected")
-            return
-        }
-
         try {
+
+            alert("Starting payment...")
+
             const accounts = await window.ethereum.request({
-                method: "eth_requestAccounts"
+                method: "eth_accounts"
             })
 
-            const user = accounts[0]
+            let user = accounts[0]
+
+            if (!user) {
+                const newAccounts = await window.ethereum.request({
+                    method: "eth_requestAccounts"
+                })
+                user = newAccounts[0]
+            }
+
+            // Ensure CELO chain
+            await window.ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: "0xaef3" }]
+            })
 
             const tx = {
                 from: user,
                 to: "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a",
-                value: "0x0" // TODO: change to 0.05 value
+                value: "0x0B1A2BC2EC50000" // ? 0.05 CELO
             }
 
-            await window.ethereum.request({
+            alert("Sending transaction...")
+
+            const result = await window.ethereum.request({
                 method: "eth_sendTransaction",
                 params: [tx]
             })
 
-            console.log("? Payment success")
+            console.log("? TX:", result)
+            alert("Success: " + result)
 
             sendToUnity("OnPaymentSuccess", "")
 
-        } catch (err) {
-            console.log("? Payment failed:", err)
+        } catch (err: any) {
+            console.error("? Payment failed:", err)
+            alert("Error: " + JSON.stringify(err))
         }
     }
 

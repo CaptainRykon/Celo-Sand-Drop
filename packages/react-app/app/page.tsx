@@ -2,7 +2,10 @@
 
 import { useEffect } from "react"
 import { saveScore, getLeaderboard } from "@/lib/Leaderboard"
+import { encodeFunctionData } from "viem"
 
+const CONTRACT = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
+const USDT = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
 export default function Home() {
 
     useEffect(() => {
@@ -43,56 +46,86 @@ export default function Home() {
     // ?? PAYMENT FUNCTION
     // =========================
     async function handlePayment() {
-
         try {
 
-            alert("Start payment")
-
-            const accounts = await window.ethereum.request({
-                method: "eth_accounts"
+            const [user] = await window.ethereum.request({
+                method: "eth_requestAccounts"
             })
 
-            let user = accounts[0]
-
-            if (!user) {
-                const newAccounts = await window.ethereum.request({
-                    method: "eth_requestAccounts"
-                })
-                user = newAccounts[0]
-            }
-
-            // ? Switch to CELO Alfajores
+            // ? SWITCH TO CELO MAINNET
             await window.ethereum.request({
                 method: "wallet_switchEthereumChain",
-                params: [{ chainId: "0xaef3" }]
+                params: [{ chainId: "0xA4EC" }] // 42220
             })
 
-            const tx = {
-                from: user,
-                to: "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a",
+            // =========================
+            // STEP 1: APPROVE USDT
+            // =========================
 
-                // ? 0.05 CELO
-                value: "0x0B1A2BC2EC50000",
+            const approveData = encodeFunctionData({
+                abi: [{
+                    name: "approve",
+                    type: "function",
+                    stateMutability: "nonpayable",
+                    inputs: [
+                        { name: "spender", type: "address" },
+                        { name: "amount", type: "uint256" }
+                    ],
+                    outputs: []
+                }],
+                functionName: "approve",
+                args: [CONTRACT, BigInt(50000)]
+            })
 
-                // ? REQUIRED for MiniPay sometimes
-                gas: "0x5208", // 21000
-            }
-
-            const result = await window.ethereum.request({
+            await window.ethereum.request({
                 method: "eth_sendTransaction",
-                params: [tx]
+                params: [{
+                    from: user,
+                    to: USDT,
+                    data: approveData
+                }]
             })
 
-            alert("TX Success: " + result)
+            alert("Approve done")
+
+            // wait few seconds
+            await new Promise(r => setTimeout(r, 5000))
+
+            // =========================
+            // STEP 2: CALL PAY()
+            // =========================
+
+            const payData = encodeFunctionData({
+                abi: [{
+                    name: "pay",
+                    type: "function",
+                    stateMutability: "nonpayable",
+                    inputs: [],
+                    outputs: []
+                }],
+                functionName: "pay",
+                args: []
+            })
+
+            await window.ethereum.request({
+                method: "eth_sendTransaction",
+                params: [{
+                    from: user,
+                    to: CONTRACT,
+                    data: payData
+                }]
+            })
+
+            alert("Payment success ?")
 
             sendToUnity("OnPaymentSuccess", "")
 
-        } catch (err: any) {
+        } catch (err) {
             console.error("? Payment failed:", err)
-            alert("Error: " + JSON.stringify(err))
+            alert(JSON.stringify(err))
         }
     }
-
+}
     // =========================
     // ?? SAVE SCORE
     // =========================

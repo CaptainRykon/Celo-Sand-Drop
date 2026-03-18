@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect } from "react"
 import { saveScore, getLeaderboard } from "@/lib/Leaderboard"
@@ -52,14 +52,18 @@ export default function Home() {
                 method: "eth_requestAccounts"
             })
 
-            // ? SWITCH TO CELO MAINNET
-            await window.ethereum.request({
-                method: "wallet_switchEthereumChain",
-                params: [{ chainId: "0xA4EC" }] // 42220
+            // ✅ JUST CHECK CHAIN (DO NOT SWITCH)
+            const chainId = await window.ethereum.request({
+                method: "eth_chainId"
             })
 
+            if (chainId !== "0xa4ec") {
+                alert("Please switch MiniPay to CELO Mainnet")
+                return
+            }
+
             // =========================
-            // STEP 1: APPROVE USDT
+            // APPROVE
             // =========================
 
             const approveData = encodeFunctionData({
@@ -88,11 +92,10 @@ export default function Home() {
 
             alert("Approve done")
 
-            // wait few seconds
             await new Promise(r => setTimeout(r, 5000))
 
             // =========================
-            // STEP 2: CALL PAY()
+            // PAY
             // =========================
 
             const payData = encodeFunctionData({
@@ -116,12 +119,12 @@ export default function Home() {
                 }]
             })
 
-            alert("Payment success ?")
+            alert("Payment success ✅")
 
             sendToUnity("OnPaymentSuccess", "")
 
         } catch (err) {
-            console.error("? Payment failed:", err)
+            console.error("❌ Payment failed:", err)
             alert(JSON.stringify(err))
         }
     }

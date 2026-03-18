@@ -93,13 +93,14 @@
         }
 
 
+
         var buildUrl = "Build";
-        var loaderUrl = buildUrl + "/af7f29685d601b7a99bbea7210f934a5.loader.js";
+        var loaderUrl = buildUrl + "/00de09ab7d445944cec2347d2112684d.loader.js";
         var config = {
             arguments: [],
-            dataUrl: buildUrl + "/af668e95139cdd143be706666056b2a5.data",
-            frameworkUrl: buildUrl + "/ac3ac2ae934d7abb1ac70f67e6232fcd.framework.js",
-            codeUrl: buildUrl + "/feca80600170033775f36bcbdb1fb2b7.wasm",
+            dataUrl: buildUrl + "/4cb344d95764b2bd914a3981363bef63.data",
+            frameworkUrl: buildUrl + "/9fafacf9aa1b228807ff824072e0ce3b.framework.js",
+            codeUrl: buildUrl + "/a965ef9d1b641a38b6ec0cc2d7894f24.wasm",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "DefaultCompany",
             productName: "MiniPay SandDrop",
@@ -163,67 +164,28 @@
                 ResizeCanvasWithAspect();
 
 
-         
-                window.addEventListener("message", (ev) => {
-                    const d = ev.data;
 
-                    if (d?.type === "frame-action" && d.action === "request-payment") {
-                        console.log("💳 Forwarding legacy payment request");
 
-                        window.parent.postMessage(
-                            {
-                                type: "frame-action",
-                                action: "request-pass-payment",
-                                amount: d.amount,
-                                passType: "mint",
-                                chain: d.chain
-                            }, "*");
+
+
+                window.addEventListener("message", function (event) {
+
+                    if (!event.data) return;
+
+                    if (event.data.type === "UNITY_CALLBACK") {
+
+                        unityInstance.SendMessage(
+                            "Leaderboard", // GameObject name
+                            event.data.method,
+                            event.data.value
+                        );
                     }
+
                 });
-
-
-
-                // Add chain parameter ↓↓↓
-                window.RequestPassPayment = (amount, passType, chain) => {
-                    console.log(`💳 [index.html] Requesting pass payment → ${amount} USDC for ${passType} on ${chain}`);
-
-                    window.parent.postMessage({
-                        type: "frame-action",
-                        action: "request-pass-payment",
-                        amount: Number(amount),
-                        passType: passType,
-                        chain: chain   // send chain to React
-                    }, "*");
-                };
 
 
                 // === React → Unity Listener ===
-                window.addEventListener("message", (ev) => {
-                    const d = ev.data;
-
-                    // Farcaster user info
-                    if (d?.type === "FARCASTER_USER_INFO") {
-                        const { username, pfpUrl } = d.payload || {};
-                        if (username) unityInstance.SendMessage("FarcasterBridge", "SetFarcasterUsername", username);
-                        if (pfpUrl) unityInstance.SendMessage("FarcasterBridge", "SetPfpUrl", pfpUrl);
-                    }
-
-                    // Unity method calls (from React)
-                    if (d?.type === "UNITY_METHOD_CALL") {
-                        const method = d.method;
-                        const arg = d.args?.[0] || "0";
-
-                        // Send SetSpinData to SpinManager instead of FarcasterBridge
-                        let targetObject = "FarcasterBridge";
-
-                        if (method === "SetSpinData") targetObject = "SpinManager";
-                        if (method === "SetLeaderboardEntries") targetObject = "Leaderboard";
-
-                        unityInstance.SendMessage(targetObject, method, arg);
-
-                    }
-
-                });
+               
 
             }).catch(err => alert(err));
         };

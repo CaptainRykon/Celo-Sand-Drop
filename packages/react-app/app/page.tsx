@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { saveScore, getLeaderboard } from "@/lib/Leaderboard"
 
 export default function Home() {
 
@@ -9,25 +10,25 @@ export default function Home() {
         const handleUnityMessage = async (event: any) => {
 
             const data = event.data
-
             if (!data) return
 
             switch (data.type) {
 
-                case "UNITY_PAY_GAMEPLAY":
-
-                    await payGameplayEntry()
-
+                // ?? PAYMENT
+                case "UNITY_PAY_ENTRY":
+                    await handlePayment()
                     break
 
-                case "UNITY_SUBMIT_SCORE":
-
-                    console.log("Score:", data.score)
-
+                // ?? SAVE SCORE
+                case "UNITY_SAVE_SCORE":
+                    await handleSaveScore(data)
                     break
 
+                // ?? GET LEADERBOARD
+                case "UNITY_GET_LEADERBOARD":
+                    await handleGetLeaderboard(data)
+                    break
             }
-
         }
 
         window.addEventListener("message", handleUnityMessage)
@@ -38,9 +39,10 @@ export default function Home() {
 
     }, [])
 
-
-
-    async function payGameplayEntry() {
+    // =========================
+    // ?? PAYMENT FUNCTION
+    // =========================
+    async function handlePayment() {
 
         if (!window.ethereum) {
             alert("MiniPay wallet not detected")
@@ -48,7 +50,6 @@ export default function Home() {
         }
 
         try {
-
             const accounts = await window.ethereum.request({
                 method: "eth_requestAccounts"
             })
@@ -58,7 +59,7 @@ export default function Home() {
             const tx = {
                 from: user,
                 to: "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a",
-                value: "0x0"
+                value: "0x0" // TODO: change to 0.05 value
             }
 
             await window.ethereum.request({
@@ -66,21 +67,68 @@ export default function Home() {
                 params: [tx]
             })
 
-            console.log("Gameplay payment sent")
+            console.log("? Payment success")
 
-        }
-        catch (err) {
-            console.log(err)
-        }
+            sendToUnity("OnPaymentSuccess", "")
 
+        } catch (err) {
+            console.log("? Payment failed:", err)
+        }
     }
 
+    // =========================
+    // ?? SAVE SCORE
+    // =========================
+    async function handleSaveScore(data: any) {
 
+        try {
+            await saveScore(data.gameName, data.username, data.score)
 
+            console.log("?? Score saved to Firebase")
+
+            sendToUnity("OnLeaderboardSaved", "")
+
+        } catch (err) {
+            console.log("? Save score failed:", err)
+        }
+    }
+
+    // =========================
+    // ?? GET LEADERBOARD
+    // =========================
+    async function handleGetLeaderboard(data: any) {
+
+        try {
+            const leaderboard = await getLeaderboard(data.gameName)
+
+            console.log("?? Leaderboard:", leaderboard)
+
+            sendToUnity("OnLeaderboardReceived", JSON.stringify(leaderboard))
+
+        } catch (err) {
+            console.log("? Fetch leaderboard failed:", err)
+        }
+    }
+
+    // =========================
+    // ?? SEND BACK TO UNITY
+    // =========================
+    function sendToUnity(method: string, value: string) {
+
+        const iframe: any = document.querySelector("iframe")
+
+        iframe?.contentWindow?.postMessage({
+            type: "UNITY_CALLBACK",
+            method,
+            value
+        }, "*")
+    }
+
+    // =========================
+    // UI
+    // =========================
     return (
-
         <div style={{ width: "100vw", height: "100vh" }}>
-
             <iframe
                 src="/game/index.html"
                 style={{
@@ -89,9 +137,6 @@ export default function Home() {
                     border: "none"
                 }}
             />
-
         </div>
-
     )
-
 }

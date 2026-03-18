@@ -125,7 +125,7 @@ export default function Home() {
             alert(JSON.stringify(err))
         }
     }
-}
+
     // =========================
     // ?? SAVE SCORE
     // =========================

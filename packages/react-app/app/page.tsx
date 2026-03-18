@@ -46,7 +46,7 @@ export default function Home() {
 
         try {
 
-            alert("Starting payment...")
+            alert("Start payment")
 
             const accounts = await window.ethereum.request({
                 method: "eth_accounts"
@@ -61,7 +61,7 @@ export default function Home() {
                 user = newAccounts[0]
             }
 
-            // Ensure CELO chain
+            // ? Switch to CELO Alfajores
             await window.ethereum.request({
                 method: "wallet_switchEthereumChain",
                 params: [{ chainId: "0xaef3" }]
@@ -70,18 +70,20 @@ export default function Home() {
             const tx = {
                 from: user,
                 to: "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a",
-                value: "0x0B1A2BC2EC50000" // ? 0.05 CELO
-            }
 
-            alert("Sending transaction...")
+                // ? 0.05 CELO
+                value: "0x0B1A2BC2EC50000",
+
+                // ? REQUIRED for MiniPay sometimes
+                gas: "0x5208", // 21000
+            }
 
             const result = await window.ethereum.request({
                 method: "eth_sendTransaction",
                 params: [tx]
             })
 
-            console.log("? TX:", result)
-            alert("Success: " + result)
+            alert("TX Success: " + result)
 
             sendToUnity("OnPaymentSuccess", "")
 

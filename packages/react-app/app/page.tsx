@@ -52,7 +52,6 @@ export default function Home() {
                 method: "eth_requestAccounts"
             })
 
-            // ✅ JUST CHECK CHAIN (DO NOT SWITCH)
             const chainId = await window.ethereum.request({
                 method: "eth_chainId"
             })
@@ -63,7 +62,7 @@ export default function Home() {
             }
 
             // =========================
-            // APPROVE
+            // STEP 1: APPROVE
             // =========================
 
             const approveData = encodeFunctionData({
@@ -81,7 +80,7 @@ export default function Home() {
                 args: [CONTRACT, BigInt(50000)]
             })
 
-            await window.ethereum.request({
+            const approveTx = await window.ethereum.request({
                 method: "eth_sendTransaction",
                 params: [{
                     from: user,
@@ -90,12 +89,13 @@ export default function Home() {
                 }]
             })
 
-            alert("Approve done")
+            console.log("Approve TX:", approveTx)
 
-            await new Promise(r => setTimeout(r, 5000))
+            // ✅ WAIT FOR CONFIRMATION (IMPORTANT)
+            await waitForTx(approveTx)
 
             // =========================
-            // PAY
+            // STEP 2: PAY
             // =========================
 
             const payData = encodeFunctionData({
@@ -110,7 +110,7 @@ export default function Home() {
                 args: []
             })
 
-            await window.ethereum.request({
+            const payTx = await window.ethereum.request({
                 method: "eth_sendTransaction",
                 params: [{
                     from: user,
@@ -119,6 +119,10 @@ export default function Home() {
                 }]
             })
 
+            console.log("Pay TX:", payTx)
+
+            await waitForTx(payTx)
+
             alert("Payment success ✅")
 
             sendToUnity("OnPaymentSuccess", "")
@@ -126,6 +130,19 @@ export default function Home() {
         } catch (err) {
             console.error("❌ Payment failed:", err)
             alert(JSON.stringify(err))
+        }
+    }
+
+    async function waitForTx(txHash: string) {
+        while (true) {
+            const receipt = await window.ethereum.request({
+                method: "eth_getTransactionReceipt",
+                params: [txHash]
+            })
+
+            if (receipt) return receipt
+
+            await new Promise(r => setTimeout(r, 2000))
         }
     }
 

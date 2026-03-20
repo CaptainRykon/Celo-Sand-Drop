@@ -58,7 +58,7 @@ export async function getUser(wallet: string) {
 }
 
 // ? USE CHANCE
-export async function useChance(wallet: string) {
+export async function consumeChance(wallet: string) {
     await authReady
 
     const userRef = ref(db, `users/${wallet}`)

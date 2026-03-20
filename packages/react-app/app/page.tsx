@@ -6,7 +6,7 @@ import { encodeFunctionData } from "viem"
 
 const CONTRACT = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
 const USDT = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
-import { initUser, getUser, useChance, addChances } from "@/lib/chances"
+import { initUser, getUser, consumeChance, addChances } from "@/lib/chances"
 
 export default function Home() {
 
@@ -149,7 +149,7 @@ export default function Home() {
 
     async function handleUseChance() {
         const wallet = await getWallet()
-        const success = await useChance(wallet)
+        const success = await consumeChance(wallet)
 
         sendToUnity("OnChanceUsed", success ? "1" : "0")
     }

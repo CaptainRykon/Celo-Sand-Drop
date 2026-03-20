@@ -10,6 +10,11 @@ const firebaseConfig = {
     apiKey: "AIzaSyBvv2vMLgacfTYA-vjO9-o4NdVuMO64N3s",
     authDomain: "sanddrop-32496.firebaseapp.com",
     projectId: "sanddrop-32496",
+
+    // 🔥 ADD THIS (MOST IMPORTANT)
+    databaseURL: "https://sanddrop-32496-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+
     storageBucket: "sanddrop-32496.firebasestorage.app",
     messagingSenderId: "220945597047",
     appId: "1:220945597047:web:1ea931fb68294dc31ffc72",

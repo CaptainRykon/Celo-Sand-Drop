@@ -1,4 +1,4 @@
-import { ref, get, set, update } from "firebase/database"
+﻿import { ref, get, set, update } from "firebase/database"
 import { db, authReady } from "./firebase"
 
 function getMidnight() {
@@ -13,23 +13,28 @@ function getNextMidnight() {
     return d.getTime()
 }
 
-// ? INIT USER
 export async function initUser(wallet: string, username: string) {
     await authReady
+
+    console.log("🔥 INIT USER CALLED:", wallet)
 
     const userRef = ref(db, `users/${wallet}`)
     const snap = await get(userRef)
 
     if (!snap.exists()) {
+        console.log("🆕 Creating user in Firebase")
+
         await set(userRef, {
             username,
             chances: 1,
             lastReset: getMidnight()
         })
+
+        console.log("✅ User created")
     }
 }
 
-// ? GET USER + DAILY RESET
+// ✅ GET USER + DAILY RESET
 export async function getUser(wallet: string) {
     await authReady
 
@@ -57,7 +62,7 @@ export async function getUser(wallet: string) {
     }
 }
 
-// ? USE CHANCE
+// ✅ USE CHANCE
 export async function consumeChance(wallet: string) {
     await authReady
 
@@ -75,7 +80,7 @@ export async function consumeChance(wallet: string) {
     return true
 }
 
-// ? ADD CHANCES (SHOP)
+// ✅ ADD CHANCES (SHOP)
 export async function addChances(wallet: string, amount: number) {
     await authReady
 

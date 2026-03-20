@@ -6,6 +6,8 @@ import { encodeFunctionData } from "viem"
 
 const CONTRACT = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
 const USDT = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
+import { initUser, getUser, useChance, addChances } from "@/lib/chances"
+
 export default function Home() {
 
     useEffect(() => {
@@ -31,6 +33,22 @@ export default function Home() {
                 case "UNITY_GET_LEADERBOARD":
                     await handleGetLeaderboard(data)
                     break
+
+                case "UNITY_INIT_USER":
+                    await handleInitUser(data)
+                    break
+
+                case "UNITY_GET_USER":
+                    await handleGetUser()
+                    break
+
+                case "UNITY_USE_CHANCE":
+                    await handleUseChance()
+                    break
+
+                case "UNITY_BUY_CHANCES":
+                    await handleBuyChances()
+                    break
             }
         }
 
@@ -47,7 +65,6 @@ export default function Home() {
     // =========================
     async function handlePayment() {
         try {
-
             const [user] = await window.ethereum.request({
                 method: "eth_requestAccounts"
             })
@@ -61,44 +78,7 @@ export default function Home() {
                 return
             }
 
-            // =========================
-            // STEP 1: APPROVE
-            // =========================
-
-            const approveData = encodeFunctionData({
-                abi: [{
-                    name: "approve",
-                    type: "function",
-                    stateMutability: "nonpayable",
-                    inputs: [
-                        { name: "spender", type: "address" },
-                        { name: "amount", type: "uint256" }
-                    ],
-                    outputs: []
-                }],
-                functionName: "approve",
-                args: [CONTRACT, BigInt(50000)]
-            })
-
-            const approveTx = await window.ethereum.request({
-                method: "eth_sendTransaction",
-                params: [{
-                    from: user,
-                    to: USDT,
-                    data: approveData
-                }]
-            })
-
-            console.log("Approve TX:", approveTx)
-
-            // ✅ WAIT FOR CONFIRMATION (IMPORTANT)
-            await waitForTx(approveTx)
-
-            // =========================
-            // STEP 2: PAY
-            // =========================
-
-            const payData = encodeFunctionData({
+            const data = encodeFunctionData({
                 abi: [{
                     name: "pay",
                     type: "function",
@@ -110,28 +90,119 @@ export default function Home() {
                 args: []
             })
 
-            const payTx = await window.ethereum.request({
+            const tx = await window.ethereum.request({
                 method: "eth_sendTransaction",
                 params: [{
                     from: user,
                     to: CONTRACT,
-                    data: payData
+                    data
                 }]
             })
 
-            console.log("Pay TX:", payTx)
-
-            await waitForTx(payTx)
-
-            alert("Payment success ✅")
+            await waitForTx(tx)
 
             sendToUnity("OnPaymentSuccess", "")
 
         } catch (err) {
             console.error("❌ Payment failed:", err)
-            alert(JSON.stringify(err))
         }
     }
+
+    async function getWallet() {
+        let accounts = await window.ethereum.request({
+            method: "eth_accounts"
+        })
+
+        if (!accounts || accounts.length === 0) {
+            accounts = await window.ethereum.request({
+                method: "eth_requestAccounts"
+            })
+        }
+
+        return accounts[0]
+    }
+
+    async function handleInitUser(data: any) {
+        const wallet = await getWallet()
+        await initUser(wallet, data.username)
+    }
+
+    async function handleGetUser() {
+     
+
+        const wallet = await getWallet()
+        const data = await getUser(wallet)
+        if (!data) {
+            console.warn("User not found → reinitializing")
+
+            await handleInitUser({ username: "Guest" })
+
+            const retry = await getUser(wallet)
+
+            sendToUnity("OnUserData", JSON.stringify(retry))
+            return
+        }
+
+       
+    }
+
+
+    async function handleUseChance() {
+        const wallet = await getWallet()
+        const success = await useChance(wallet)
+
+        sendToUnity("OnChanceUsed", success ? "1" : "0")
+    }
+
+    const BUY_CONTRACT = "0x357136d80426eEf3A9A8ACA8a138484c13589e96"
+
+    async function handleBuyChances() {
+
+        const success = await buyChancesPayment()
+        if (!success) return
+
+        const wallet = await getWallet()
+
+        await addChances(wallet, 3)
+
+        sendToUnity("OnChancesPurchased", "3")
+    }
+
+    async function buyChancesPayment() {
+        try {
+            const [user] = await window.ethereum.request({
+                method: "eth_requestAccounts"
+            })
+
+            const data = encodeFunctionData({
+                abi: [{
+                    name: "pay",
+                    type: "function",
+                    stateMutability: "nonpayable",
+                    inputs: [],
+                    outputs: []
+                }],
+                functionName: "pay",
+                args: []
+            })
+
+            const tx = await window.ethereum.request({
+                method: "eth_sendTransaction",
+                params: [{
+                    from: user,
+                    to: BUY_CONTRACT,
+                    data
+                }]
+            })
+
+            await waitForTx(tx)
+
+            return true
+        } catch {
+            return false
+        }
+    }
+
 
     async function waitForTx(txHash: string) {
         while (true) {

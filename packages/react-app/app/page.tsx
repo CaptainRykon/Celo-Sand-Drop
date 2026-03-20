@@ -9,7 +9,7 @@ const USDT = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
 import { initUser, getUser, consumeChance, addChances } from "@/lib/chances"
 
 export default function Home() {
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
 
         const handleUnityMessage = async (event: any) => {
@@ -128,10 +128,9 @@ export default function Home() {
     }
 
     async function handleGetUser() {
-     
-
         const wallet = await getWallet()
         const data = await getUser(wallet)
+
         if (!data) {
             console.warn("User not found → reinitializing")
 
@@ -143,7 +142,8 @@ export default function Home() {
             return
         }
 
-       
+        // ✅ THIS WAS MISSING
+        sendToUnity("OnUserData", JSON.stringify(data))
     }
 
 

@@ -174,9 +174,22 @@
 
                     if (event.data.type === "UNITY_CALLBACK") {
 
+                        const method = event.data.method;
+
+                        // 🎯 ROUTING LOGIC
+                        let target = "Leaderboard"; // default
+
+                        if (
+                            method === "OnUserData" ||
+                            method === "OnChanceUsed" ||
+                            method === "OnChancesPurchased"
+                        ) {
+                            target = "Chance";
+                        }
+
                         unityInstance.SendMessage(
-                            "Leaderboard", // GameObject name
-                            event.data.method,
+                            target,
+                            method,
                             event.data.value
                         );
                     }

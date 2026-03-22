@@ -198,7 +198,7 @@ export default function Home() {
     }
 
     const BUY_CONTRACT = "0xa4303482605aAEB0bAC78F184f2f132D5e8A132F"
-
+    const CHANCE_REWARD = 3
     const BUY_ABI = [
         {
             inputs: [],
@@ -215,13 +215,16 @@ export default function Home() {
 
         const wallet = await getWallet()
 
-        await addChances(wallet, 3)
+        await addChances(wallet, CHANCE_REWARD)
 
         // 🔥 GET UPDATED USER DATA
         const updated = await getUser(wallet)
 
         // 🔥 SEND FULL DATA
         sendToUnity("OnUserData", JSON.stringify(updated))
+
+        // ✅ NEW
+        sendToUnity("OnPurchaseSuccess", "")
     }
 
     async function buyChancesPayment() {

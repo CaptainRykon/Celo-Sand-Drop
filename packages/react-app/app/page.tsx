@@ -181,15 +181,24 @@ export default function Home() {
 
     async function handleUseChance() {
         const wallet = await getWallet()
+
         const success = await consumeChance(wallet)
 
-        sendToUnity("OnChanceUsed", success ? "1" : "0")
+        if (!success) {
+            sendToUnity("OnChanceUsed", "0")
+            return
+        }
+
+        // 🔥 GET UPDATED USER DATA
+        const updated = await getUser(wallet)
+
+        // 🔥 SEND FULL DATA BACK TO UNITY
+        sendToUnity("OnUserData", JSON.stringify(updated))
     }
 
     const BUY_CONTRACT = "0x357136d80426eEf3A9A8ACA8a138484c13589e96"
 
     async function handleBuyChances() {
-
         const success = await buyChancesPayment()
         if (!success) return
 
@@ -197,7 +206,11 @@ export default function Home() {
 
         await addChances(wallet, 3)
 
-        sendToUnity("OnChancesPurchased", "3")
+        // 🔥 GET UPDATED USER DATA
+        const updated = await getUser(wallet)
+
+        // 🔥 SEND FULL DATA
+        sendToUnity("OnUserData", JSON.stringify(updated))
     }
 
     async function buyChancesPayment() {

@@ -222,7 +222,41 @@ export default function Home() {
                 method: "eth_requestAccounts"
             })
 
-            const data = encodeFunctionData({
+            // =========================
+            // STEP 1: APPROVE (FIX)
+            // =========================
+            const approveData = encodeFunctionData({
+                abi: [{
+                    name: "approve",
+                    type: "function",
+                    stateMutability: "nonpayable",
+                    inputs: [
+                        { name: "spender", type: "address" },
+                        { name: "amount", type: "uint256" }
+                    ],
+                    outputs: []
+                }],
+                functionName: "approve",
+                args: [BUY_CONTRACT, BigInt(50000)]
+            })
+
+            console.log("🔥 Approving USDT...");
+
+            const approveTx = await window.ethereum.request({
+                method: "eth_sendTransaction",
+                params: [{
+                    from: user,
+                    to: USDT,
+                    data: approveData
+                }]
+            })
+
+            await waitForTx(approveTx)
+
+            // =========================
+            // STEP 2: PAY
+            // =========================
+            const payData = encodeFunctionData({
                 abi: [{
                     name: "pay",
                     type: "function",
@@ -234,12 +268,14 @@ export default function Home() {
                 args: []
             })
 
+            console.log("🔥 Sending Pay TX...");
+
             const tx = await window.ethereum.request({
                 method: "eth_sendTransaction",
                 params: [{
                     from: user,
                     to: BUY_CONTRACT,
-                    data
+                    data: payData
                 }]
             })
 
@@ -255,7 +291,6 @@ export default function Home() {
             return false
         }
     }
-
 
     async function waitForTx(txHash: string) {
         while (true) {

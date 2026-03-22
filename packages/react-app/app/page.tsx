@@ -49,6 +49,11 @@ export default function Home() {
                 case "UNITY_BUY_CHANCES":
                     await handleBuyChances()
                     break
+
+                case "UNITY_GET_USER":
+                    console.log("🔥 UNITY_GET_USER RECEIVED")
+                    await handleGetUser()
+                    break
             }
         }
 

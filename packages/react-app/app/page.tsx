@@ -47,12 +47,8 @@ export default function Home() {
                     break
 
                 case "UNITY_BUY_CHANCES":
+                    console.log("🔥 UNITY_BUY_CHANCES RECEIVED");
                     await handleBuyChances()
-                    break
-
-                case "UNITY_GET_USER":
-                    console.log("🔥 UNITY_GET_USER RECEIVED")
-                    await handleGetUser()
                     break
             }
         }
@@ -220,6 +216,8 @@ export default function Home() {
 
     async function buyChancesPayment() {
         try {
+            console.log("🔥 Starting Buy Payment");
+
             const [user] = await window.ethereum.request({
                 method: "eth_requestAccounts"
             })
@@ -245,10 +243,15 @@ export default function Home() {
                 }]
             })
 
+            console.log("🔥 TX SENT:", tx);
+
             await waitForTx(tx)
 
+            console.log("🔥 PAYMENT SUCCESS");
+
             return true
-        } catch {
+        } catch (err) {
+            console.error("❌ BUY FAILED:", err);
             return false
         }
     }

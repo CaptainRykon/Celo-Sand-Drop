@@ -74,11 +74,43 @@ export default function Home() {
             })
 
             if (chainId !== "0xa4ec") {
-                alert("Please switch MiniPay to CELO Mainnet")
+                alert("Wrong network")
                 return
             }
 
-            const data = encodeFunctionData({
+            // =========================
+            // STEP 1: APPROVE (ONLY ONCE)
+            // =========================
+
+            const approveData = encodeFunctionData({
+                abi: [{
+                    name: "approve",
+                    type: "function",
+                    stateMutability: "nonpayable",
+                    inputs: [
+                        { name: "spender", type: "address" },
+                        { name: "amount", type: "uint256" }
+                    ],
+                    outputs: []
+                }],
+                functionName: "approve",
+                args: [CONTRACT, BigInt(50000)]
+            })
+
+            await window.ethereum.request({
+                method: "eth_sendTransaction",
+                params: [{
+                    from: user,
+                    to: USDT,
+                    data: approveData
+                }]
+            })
+
+            // =========================
+            // STEP 2: PAY
+            // =========================
+
+            const payData = encodeFunctionData({
                 abi: [{
                     name: "pay",
                     type: "function",
@@ -95,7 +127,7 @@ export default function Home() {
                 params: [{
                     from: user,
                     to: CONTRACT,
-                    data
+                    data: payData
                 }]
             })
 

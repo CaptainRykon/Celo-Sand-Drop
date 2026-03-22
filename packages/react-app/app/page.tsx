@@ -78,7 +78,7 @@ export default function Home() {
                 alert("Wrong network")
                 return
             }
-
+       
             // =========================
             // STEP 1: APPROVE (ONLY ONCE)
             // =========================
@@ -197,7 +197,17 @@ export default function Home() {
         sendToUnity("OnUserData", JSON.stringify(updated))
     }
 
-    const BUY_CONTRACT = "0x357136d80426eEf3A9A8ACA8a138484c13589e96"
+    const BUY_CONTRACT = "0xa4303482605aAEB0bAC78F184f2f132D5e8A132F"
+
+    const BUY_ABI = [
+        {
+            inputs: [],
+            name: "pay",
+            outputs: [],
+            stateMutability: "nonpayable",
+            type: "function"
+        }
+    ]
 
     async function handleBuyChances() {
         const success = await buyChancesPayment()
@@ -250,20 +260,14 @@ export default function Home() {
                     data: approveData
                 }]
             })
-
+            
             await waitForTx(approveTx)
 
             // =========================
             // STEP 2: PAY
             // =========================
             const payData = encodeFunctionData({
-                abi: [{
-                    name: "pay",
-                    type: "function",
-                    stateMutability: "nonpayable",
-                    inputs: [],
-                    outputs: []
-                }],
+                abi: BUY_ABI,
                 functionName: "pay",
                 args: []
             })

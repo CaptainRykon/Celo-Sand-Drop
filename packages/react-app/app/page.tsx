@@ -95,7 +95,7 @@ export default function Home() {
                     outputs: []
                 }],
                 functionName: "approve",
-                args: [CONTRACT, BigInt(50000)]
+                args: [CONTRACT, BigInt(100000)]
             })
 
             await window.ethereum.request({
@@ -250,7 +250,7 @@ export default function Home() {
                     outputs: []
                 }],
                 functionName: "approve",
-                args: [BUY_CONTRACT, BigInt(50000)]
+                args: [BUY_CONTRACT, BigInt(100000)]
             })
 
             console.log("🔥 Approving USDT...");
@@ -311,6 +311,10 @@ export default function Home() {
             await new Promise(r => setTimeout(r, 2000))
         }
     }
+
+
+
+
 
     // =========================
     // ?? SAVE SCORE

@@ -1,22 +1,24 @@
-import { FC, ReactNode } from "react";
-import Footer from "./Footer";
-import Header from "./Header";
+import '@/styles/globals.css'
+import { AppProvider } from '@/providers/AppProvider'
 
-interface Props {
-    children: ReactNode;
-}
-const Layout: FC<Props> = ({ children }) => {
+export default function RootLayout({
+    children,
+}: {
+    children: React.ReactNode
+}) {
     return (
-        <>
-            <div className="bg-gypsum overflow-hidden flex flex-col min-h-screen">
-                <Header />
-                <div className="py-16 max-w-7xl mx-auto space-y-8 sm:px-6 lg:px-8">
+        <html lang="en">
+            <body style={{
+                margin: 0,
+                padding: 0,
+                overflow: "hidden",
+                height: "100vh",
+                width: "100vw"
+            }}>
+                <AppProvider>
                     {children}
-                </div>
-                <Footer />
-            </div>
-        </>
-    );
-};
-
-export default Layout;
+                </AppProvider>
+            </body>
+        </html>
+    )
+}

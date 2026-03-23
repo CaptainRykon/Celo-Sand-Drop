@@ -3,10 +3,11 @@
 import { useEffect } from "react"
 import { saveScore, getLeaderboard } from "@/lib/Leaderboard"
 import { encodeFunctionData } from "viem"
+import { initUser, getUser, consumeChance, addChances, updateUsername } from "@/lib/chances"
 
 const CONTRACT = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
 const USDT = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
-import { initUser, getUser, consumeChance, addChances } from "@/lib/chances"
+
 
 export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -49,6 +50,10 @@ export default function Home() {
                 case "UNITY_BUY_CHANCES":
                     console.log("🔥 UNITY_BUY_CHANCES RECEIVED");
                     await handleBuyChances()
+                    break
+
+                case "UNITY_UPDATE_USERNAME":
+                    await handleUpdateUsername(data)
                     break
             }
         }
@@ -313,7 +318,16 @@ export default function Home() {
     }
 
 
+    async function handleUpdateUsername(data: any) {
+        const wallet = await getWallet()
 
+        await updateUsername(wallet, data.username)
+
+        // 🔥 Send updated data back
+        const updated = await getUser(wallet)
+
+        sendToUnity("OnUserData", JSON.stringify(updated))
+    }
 
 
     // =========================

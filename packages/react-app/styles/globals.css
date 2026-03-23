@@ -60,7 +60,20 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden; /* ?? THIS removes scroll */
+}
+
+#__next {
+    height: 100%;
 }

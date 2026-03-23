@@ -80,6 +80,18 @@ export async function consumeChance(wallet: string) {
     return true
 }
 
+
+export async function updateUsername(wallet: string, username: string) {
+    await authReady
+
+    const userRef = ref(db, `users/${wallet}`)
+
+    await update(userRef, {
+        username: username
+    })
+}
+
+
 // ✅ ADD CHANCES (SHOP)
 export async function addChances(wallet: string, amount: number) {
     await authReady

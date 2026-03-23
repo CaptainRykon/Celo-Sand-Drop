@@ -58,6 +58,8 @@ export default function Home() {
     // ?? PAYMENT FUNCTION
     // =========================
     async function handlePayment() {
+
+        if (typeof window === "undefined") return; // ✅ FIX
         try {
             const [user] = await window.ethereum.request({
                 method: "eth_requestAccounts"
@@ -222,6 +224,8 @@ export default function Home() {
     }
 
     async function buyChancesPayment() {
+
+        if (typeof window === "undefined") return; // ✅ FIX
         try {
             console.log("🔥 Starting Buy Payment");
 
@@ -365,6 +369,7 @@ export default function Home() {
     // ?? SEND BACK TO UNITY
     // =========================
     function sendToUnity(method: string, value: string) {
+        if (typeof window === "undefined") return; // ✅ FIX
 
         const iframe: any = document.querySelector("iframe")
 

@@ -382,13 +382,21 @@ export default function Home() {
     // UI
     // =========================
     return (
-        <div style={{ width: "100vw", height: "100vh" }}>
+        <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            overflow: "hidden"
+        }}>
             <iframe
                 src="/game/index.html"
                 style={{
                     width: "100%",
                     height: "100%",
-                    border: "none"
+                    border: "none",
+                    display: "block"
                 }}
             />
         </div>

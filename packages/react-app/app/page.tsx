@@ -1,10 +1,6 @@
 ﻿"use client";
 
-import dynamic from "next/dynamic";
-
-const GameClient = dynamic(() => import("@/components/GameClient"), {
-    ssr: false,
-});
+import GameClient from "@/components/GameClient";
 
 export default function Page() {
     return <GameClient />;

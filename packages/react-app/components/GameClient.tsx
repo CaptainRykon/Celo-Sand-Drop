@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect } from "react"
 import { saveScore, getLeaderboard } from "@/lib/Leaderboard"
@@ -12,7 +12,7 @@ const USDT = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
 export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
-        if (typeof window === "undefined") return; // ?? CRITICAL FIX
+        if (typeof window === "undefined") return; // 🚀 CRITICAL FIX
 
         const handleUnityMessage = async (event: any) => {
             const data = event.data
@@ -130,11 +130,13 @@ export default function Home() {
             sendToUnity("OnPaymentSuccess", "")
 
         } catch (err) {
-            console.error("? Payment failed:", err)
+            console.error("❌ Payment failed:", err)
         }
     }
 
     async function getWallet() {
+        if (typeof window === "undefined" || !window.ethereum) return;
+
         let accounts = await window.ethereum.request({
             method: "eth_accounts"
         })
@@ -147,7 +149,6 @@ export default function Home() {
 
         return accounts[0]
     }
-
     async function handleInitUser(data: any) {
         const wallet = await getWallet()
         await initUser(wallet, data.username)
@@ -158,7 +159,7 @@ export default function Home() {
         const data = await getUser(wallet)
 
         if (!data) {
-            console.warn("User not found ? reinitializing")
+            console.warn("User not found → reinitializing")
 
             await handleInitUser({ username: "Guest" })
 
@@ -168,7 +169,7 @@ export default function Home() {
             return
         }
 
-        // ? THIS WAS MISSING
+        // ✅ THIS WAS MISSING
         sendToUnity("OnUserData", JSON.stringify(data))
     }
 
@@ -183,10 +184,10 @@ export default function Home() {
             return
         }
 
-        // ?? GET UPDATED USER DATA
+        // 🔥 GET UPDATED USER DATA
         const updated = await getUser(wallet)
 
-        // ?? SEND FULL DATA BACK TO UNITY
+        // 🔥 SEND FULL DATA BACK TO UNITY
         sendToUnity("OnUserData", JSON.stringify(updated))
     }
 
@@ -210,19 +211,19 @@ export default function Home() {
 
         await addChances(wallet, CHANCE_REWARD)
 
-        // ?? GET UPDATED USER DATA
+        // 🔥 GET UPDATED USER DATA
         const updated = await getUser(wallet)
 
-        // ?? SEND FULL DATA
+        // 🔥 SEND FULL DATA
         sendToUnity("OnUserData", JSON.stringify(updated))
 
-        // ? NEW
+        // ✅ NEW
         sendToUnity("OnPurchaseSuccess", "")
     }
 
     async function buyChancesPayment() {
         try {
-            console.log("?? Starting Buy Payment");
+            console.log("🔥 Starting Buy Payment");
 
             const [user] = await window.ethereum.request({
                 method: "eth_requestAccounts"
@@ -246,7 +247,7 @@ export default function Home() {
                 args: [BUY_CONTRACT, BigInt(100000)]
             })
 
-            console.log("?? Approving USDT...");
+            console.log("🔥 Approving USDT...");
 
             const approveTx = await window.ethereum.request({
                 method: "eth_sendTransaction",
@@ -268,7 +269,7 @@ export default function Home() {
                 args: []
             })
 
-            console.log("?? Sending Pay TX...");
+            console.log("🔥 Sending Pay TX...");
 
             const tx = await window.ethereum.request({
                 method: "eth_sendTransaction",
@@ -279,30 +280,38 @@ export default function Home() {
                 }]
             })
 
-            console.log("?? TX SENT:", tx);
+            console.log("🔥 TX SENT:", tx);
 
             await waitForTx(tx)
 
-            console.log("?? PAYMENT SUCCESS");
+            console.log("🔥 PAYMENT SUCCESS");
 
             return true
         } catch (err) {
-            console.error("? BUY FAILED:", err);
+            console.error("❌ BUY FAILED:", err);
             return false
         }
     }
 
     async function waitForTx(txHash: string) {
-        while (true) {
+        if (typeof window === "undefined") return;
+
+        let attempts = 0;
+        const maxAttempts = 30; // ⛔ prevent infinite loop
+
+        while (attempts < maxAttempts) {
             const receipt = await window.ethereum.request({
                 method: "eth_getTransactionReceipt",
                 params: [txHash]
-            })
+            });
 
-            if (receipt) return receipt
+            if (receipt) return receipt;
 
-            await new Promise(r => setTimeout(r, 2000))
+            await new Promise(r => setTimeout(r, 2000));
+            attempts++;
         }
+
+        throw new Error("Transaction timeout");
     }
 
 
@@ -311,7 +320,7 @@ export default function Home() {
 
         await updateUsername(wallet, data.username)
 
-        // ?? Send updated data back
+        // 🔥 Send updated data back
         const updated = await getUser(wallet)
 
         sendToUnity("OnUserData", JSON.stringify(updated))

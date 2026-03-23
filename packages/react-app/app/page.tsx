@@ -1,7 +1,9 @@
-﻿import dynamic from "next/dynamic";
+﻿"use client";
+
+import dynamic from "next/dynamic";
 
 const GameClient = dynamic(() => import("@/components/GameClient"), {
-    ssr: false, // 🚀 THIS FIXES YOUR ERROR
+    ssr: false,
 });
 
 export default function Page() {

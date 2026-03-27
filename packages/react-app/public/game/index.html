@@ -13,9 +13,19 @@
         body, html {
             margin: 0;
             padding: 0;
+            width: 100%;
             height: 100%;
             background: #fff;
             overflow: hidden;
+        }
+
+        #unity-container {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            /* 🔥 THIS FIXES BOTTOM WHITE STRIP */
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .overlay {
@@ -113,8 +123,7 @@
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
             const meta = document.createElement("meta");
             meta.name = "viewport";
-            meta.content =
-                "width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes";
+            <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
             document.head.appendChild(meta);
         }
 
@@ -132,6 +141,18 @@
                 progressBarFull.style.width = (100 * progress) + "%";
             }).then((unityInstance) => {
                 window.unityInstance = unityInstance;
+
+                function fixCanvasSize() {
+                    const width = window.innerWidth;
+                    const height = window.innerHeight;
+
+                    canvas.width = width;
+                    canvas.height = height;
+                }
+
+                fixCanvasSize();
+                window.addEventListener("resize", fixCanvasSize);
+
                 loadingBar.style.display = "none";
                 document.querySelector(".overlay").style.display = "none";
 

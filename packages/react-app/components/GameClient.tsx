@@ -335,16 +335,23 @@ export default function Home() {
     // ?? SAVE SCORE
     // =========================
     async function handleSaveScore(data: any) {
-
         try {
-            await saveScore(data.gameName, data.username, data.score)
+            const wallet = await getWallet()
+            const user = await getUser(wallet)
 
-            console.log("?? Score saved to Firebase")
+            if (!user || !user.username) {
+                console.error("❌ Username missing from Firebase")
+                return
+            }
+
+            await saveScore(data.gameName, user.username, data.score)
+
+            console.log("✅ Score saved with Firebase username")
 
             sendToUnity("OnLeaderboardSaved", "")
 
         } catch (err) {
-            console.log("? Save score failed:", err)
+            console.log("❌ Save score failed:", err)
         }
     }
 

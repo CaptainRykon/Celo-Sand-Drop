@@ -121,31 +121,6 @@
         loadingBar.style.display = "block";
 
         // ================= Canvas Resize Fix =================
-        function ResizeCanvasWithAspect() {
-            const container = canvas.parentElement;
-            const cw = container.clientWidth;
-            const ch = container.clientHeight;
-
-            const containerAspect = cw / ch;
-            const gameAspect = 432 / 900;
-
-            let width, height;
-
-            if (containerAspect > gameAspect) {
-                // Container too wide → fit height
-                height = ch;
-                width = height * gameAspect;
-            } else {
-                // Container too tall → fit width
-                width = cw;
-                height = width / gameAspect;
-            }
-
-            canvas.style.width = width + "px";
-            canvas.style.height = height + "px";
-            canvas.style.margin = "auto";
-            canvas.style.display = "block";
-        }
 
      
 
@@ -162,8 +137,7 @@
 
 
 
-                // === FIX: Apply canvas size correction NOW ===
-                ResizeCanvasWithAspect();
+              
 
 
 

@@ -36,8 +36,10 @@
         }
 
         #unity-canvas {
+            width: 100vw !important;
+            height: 100vh !important;
             display: block;
-            background: #fff;
+         
         }
     </style>
 </head>
@@ -145,7 +147,7 @@
             canvas.style.display = "block";
         }
 
-        window.addEventListener("resize", ResizeCanvasWithAspect);
+     
 
         // ================= Load Unity =================
         var script = document.createElement("script");

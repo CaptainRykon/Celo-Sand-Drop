@@ -24,8 +24,8 @@
             inset: 0;
             width: 100vw;
             height: 100vh;
-            /* 🔥 THIS FIXES BOTTOM WHITE STRIP */
-            padding-bottom: env(safe-area-inset-bottom);
+            overflow: hidden;
+            background: black;
         }
 
         .overlay {
@@ -146,8 +146,8 @@
                     const width = window.innerWidth;
                     const height = window.innerHeight;
 
-                    canvas.width = width;
-                    canvas.height = height;
+                    canvas.style.width = width + "px";
+                    canvas.style.height = height + "px";
                 }
 
                 fixCanvasSize();

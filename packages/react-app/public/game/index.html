@@ -123,7 +123,7 @@
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
             const meta = document.createElement("meta");
             meta.name = "viewport";
-            <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+            meta.content = "width=device-width, initial-scale=1, viewport-fit=cover";
             document.head.appendChild(meta);
         }
 
@@ -155,14 +155,6 @@
 
                 loadingBar.style.display = "none";
                 document.querySelector(".overlay").style.display = "none";
-
-
-
-              
-
-
-
-
 
 
                 window.addEventListener("message", function (event) {

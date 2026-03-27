@@ -262,7 +262,7 @@ export default function Home() {
                 }]
             })
 
-            await waitForTx(approveTx)
+          
 
             // =========================
             // STEP 2: PAY

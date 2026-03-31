@@ -4,9 +4,9 @@ import { useEffect } from "react"
 import { saveScore, getLeaderboard } from "@/lib/Leaderboard"
 import { encodeFunctionData } from "viem"
 import { initUser, getUser, consumeChance, addChances, updateUsername } from "@/lib/chances"
-
-const CONTRACT = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
-const USDT = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
+import type { Address } from "viem"
+const CONTRACT: Address = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
+const USDT: Address = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
 
 
 export default function Home() {
@@ -136,8 +136,10 @@ export default function Home() {
         }
     }
 
-    async function getWallet() {
-        if (typeof window === "undefined" || !window.ethereum) return;
+    async function getWallet(): Promise<Address> {
+        if (typeof window === "undefined" || !window.ethereum) {
+            throw new Error("No wallet found")
+        }
 
         let accounts = await window.ethereum.request({
             method: "eth_accounts"
@@ -149,8 +151,13 @@ export default function Home() {
             })
         }
 
-        return accounts[0]
+        if (!accounts || accounts.length === 0) {
+            throw new Error("No account connected")
+        }
+
+        return accounts[0] as Address
     }
+
     async function handleInitUser(data: any) {
         const wallet = await getWallet()
         await initUser(wallet, data.username)
@@ -193,7 +200,7 @@ export default function Home() {
         sendToUnity("OnUserData", JSON.stringify(updated))
     }
 
-    const BUY_CONTRACT = "0xa4303482605aAEB0bAC78F184f2f132D5e8A132F"
+    const BUY_CONTRACT: Address = "0xa4303482605aAEB0bAC78F184f2f132D5e8A132F"
     const CHANCE_REWARD = 3
     const BUY_ABI = [
         {
@@ -236,31 +243,41 @@ export default function Home() {
             // =========================
             // STEP 1: APPROVE (FIX)
             // =========================
-            const approveData = encodeFunctionData({
-                abi: [{
-                    name: "approve",
-                    type: "function",
-                    stateMutability: "nonpayable",
-                    inputs: [
-                        { name: "spender", type: "address" },
-                        { name: "amount", type: "uint256" }
-                    ],
-                    outputs: []
-                }],
-                functionName: "approve",
-                args: [BUY_CONTRACT, BigInt(100000)]
-            })
+            const requiredAmount = BigInt(100000)
 
-            console.log("🔥 Approving USDT...");
+            const approved = await hasEnoughAllowance(
+                user as Address,
+                BUY_CONTRACT as Address,
+                requiredAmount
+            )
 
-            const approveTx = await window.ethereum.request({
-                method: "eth_sendTransaction",
-                params: [{
-                    from: user,
-                    to: USDT,
-                    data: approveData
-                }]
-            })
+            if (!approved) {
+                console.log("🔥 Approving USDT...")
+
+                const approveData = encodeFunctionData({
+                    abi: [{
+                        name: "approve",
+                        type: "function",
+                        stateMutability: "nonpayable",
+                        inputs: [
+                            { name: "spender", type: "address" },
+                            { name: "amount", type: "uint256" }
+                        ],
+                        outputs: []
+                    }],
+                    functionName: "approve",
+                    args: [BUY_CONTRACT, requiredAmount]
+                })
+
+                await window.ethereum.request({
+                    method: "eth_sendTransaction",
+                    params: [{
+                        from: user,
+                        to: USDT,
+                        data: approveData
+                    }]
+                })
+            }
 
           
 
@@ -291,8 +308,12 @@ export default function Home() {
             console.log("🔥 PAYMENT SUCCESS");
 
             return true
-        } catch (err) {
+        } catch (err: any) {
             console.error("❌ BUY FAILED:", err);
+
+            // 🔥 SEND FAILURE TO UNITY
+            sendToUnity("OnPurchaseFailed", err?.message || "FAILED")
+
             return false
         }
     }
@@ -331,6 +352,38 @@ export default function Home() {
     }
 
 
+    async function hasEnoughAllowance(
+        user: Address,
+        spender: Address,
+        amount: bigint
+    ) {
+        const data = encodeFunctionData({
+            abi: [{
+                name: "allowance",
+                type: "function",
+                stateMutability: "view",
+                inputs: [
+                    { name: "owner", type: "address" },
+                    { name: "spender", type: "address" }
+                ],
+                outputs: [{ type: "uint256" }]
+            }],
+            functionName: "allowance",
+            args: [user, spender]
+        })
+
+        const result = await window.ethereum.request({
+            method: "eth_call",
+            params: [{
+                to: USDT,
+                data
+            }, "latest"]
+        })
+
+        return BigInt(result) >= amount
+    }
+
+
     // =========================
     // ?? SAVE SCORE
     // =========================
@@ -350,8 +403,10 @@ export default function Home() {
 
             sendToUnity("OnLeaderboardSaved", "")
 
-        } catch (err) {
-            console.log("❌ Save score failed:", err)
+        } catch (err: any) {
+            console.error("❌ Payment failed:", err);
+
+            sendToUnity("OnPaymentFailed", err?.message || "FAILED")
         }
     }
 

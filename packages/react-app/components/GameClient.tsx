@@ -13,6 +13,9 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (typeof window === "undefined") return; // 🚀 CRITICAL FIX
+        if (typeof window !== "undefined" && window.ethereum) {
+            window.ethereum.request({ method: "eth_accounts" });
+        }
 
         const handleUnityMessage = async (event: any) => {
             const data = event.data
@@ -59,53 +62,76 @@ export default function Home() {
     // =========================
     async function handlePayment() {
 
-        if (typeof window === "undefined") return; // ✅ FIX
-        try {
-            const [user] = await window.ethereum.request({
-                method: "eth_requestAccounts"
-            })
+        if (typeof window === "undefined") return;
 
+        try {
+            // =========================
+            // 1. GET WALLET (NO POPUP DELAY)
+            // =========================
+            const accounts = await window.ethereum.request({
+                method: "eth_accounts"
+            });
+
+            if (!accounts || accounts.length === 0) {
+                throw new Error("Wallet not connected");
+            }
+
+            const user = accounts[0];
+
+            // =========================
+            // 2. NETWORK CHECK (FAST)
+            // =========================
             const chainId = await window.ethereum.request({
                 method: "eth_chainId"
-            })
+            });
 
             if (chainId !== "0xa4ec") {
-                alert("Wrong network")
-                return
+                sendToUnity("OnPaymentFailed", "Wrong network");
+                return;
             }
 
             // =========================
-            // STEP 1: APPROVE (ONLY ONCE)
+            // 3. CHECK ALLOWANCE (🔥 KEY SPEED BOOST)
             // =========================
+            const requiredAmount = BigInt(100000);
 
-            const approveData = encodeFunctionData({
-                abi: [{
-                    name: "approve",
-                    type: "function",
-                    stateMutability: "nonpayable",
-                    inputs: [
-                        { name: "spender", type: "address" },
-                        { name: "amount", type: "uint256" }
-                    ],
-                    outputs: []
-                }],
-                functionName: "approve",
-                args: [CONTRACT, BigInt(100000)]
-            })
+            const approved = await hasEnoughAllowance(
+                user,
+                CONTRACT,
+                requiredAmount
+            );
 
-            await window.ethereum.request({
-                method: "eth_sendTransaction",
-                params: [{
-                    from: user,
-                    to: USDT,
-                    data: approveData
-                }]
-            })
+            if (!approved) {
+                console.log("🔥 Approving USDT...");
+
+                const approveData = encodeFunctionData({
+                    abi: [{
+                        name: "approve",
+                        type: "function",
+                        stateMutability: "nonpayable",
+                        inputs: [
+                            { name: "spender", type: "address" },
+                            { name: "amount", type: "uint256" }
+                        ],
+                        outputs: []
+                    }],
+                    functionName: "approve",
+                    args: [CONTRACT, requiredAmount]
+                });
+
+                await window.ethereum.request({
+                    method: "eth_sendTransaction",
+                    params: [{
+                        from: user,
+                        to: USDT,
+                        data: approveData
+                    }]
+                });
+            }
 
             // =========================
-            // STEP 2: PAY
+            // 4. PREPARE PAYMENT DATA (FAST)
             // =========================
-
             const payData = encodeFunctionData({
                 abi: [{
                     name: "pay",
@@ -116,8 +142,11 @@ export default function Home() {
                 }],
                 functionName: "pay",
                 args: []
-            })
+            });
 
+            // =========================
+            // 5. 🚀 TRIGGER POPUP ASAP
+            // =========================
             const tx = await window.ethereum.request({
                 method: "eth_sendTransaction",
                 params: [{
@@ -125,16 +154,26 @@ export default function Home() {
                     to: CONTRACT,
                     data: payData
                 }]
-            })
+            });
 
-            await waitForTx(tx)
+            // =========================
+            // 6. WAIT AFTER POPUP (NOT BEFORE)
+            // =========================
+            await waitForTx(tx);
 
-            sendToUnity("OnPaymentSuccess", "")
+            // =========================
+            // 7. SUCCESS
+            // =========================
+            sendToUnity("OnPaymentSuccess", "");
 
-        } catch (err) {
-            console.error("❌ Payment failed:", err)
+        } catch (err: any) {
+
+            console.error("❌ Payment failed:", err);
+
+            sendToUnity("OnPaymentFailed", err?.message || "FAILED");
         }
     }
+    
 
     async function getWallet(): Promise<Address> {
         if (typeof window === "undefined" || !window.ethereum) {

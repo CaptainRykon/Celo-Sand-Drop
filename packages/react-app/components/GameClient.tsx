@@ -95,14 +95,25 @@ export default function Home() {
             // =========================
             const requiredAmount = BigInt(100000);
 
-            const approved = await hasEnoughAllowance(
-                user,
-                CONTRACT,
-                requiredAmount
-            );
+            // 🔥 CHECK LOCAL CACHE FIRST
+            const alreadyApproved = localStorage.getItem("approved_" + user);
 
+            let approved = false;
+
+            if (alreadyApproved === "true") {
+                approved = true;
+            } else {
+                approved = await hasEnoughAllowance(
+                    user,
+                    CONTRACT,
+                    requiredAmount
+                );
+            }
+
+            // 🔥 IF NOT APPROVED → DO APPROVE ONCE
             if (!approved) {
-                console.log("🔥 Approving USDT...");
+
+                console.log("🔥 First-time approval...");
 
                 const approveData = encodeFunctionData({
                     abi: [{
@@ -116,7 +127,7 @@ export default function Home() {
                         outputs: []
                     }],
                     functionName: "approve",
-                    args: [CONTRACT, requiredAmount]
+                    args: [CONTRACT, BigInt("0xffffffffffffffffffffffffffffffff")] // unlimited
                 });
 
                 await window.ethereum.request({
@@ -127,6 +138,9 @@ export default function Home() {
                         data: approveData
                     }]
                 });
+
+                // 🔥 SAVE APPROVAL
+                localStorage.setItem("approved_" + user, "true");
             }
 
             // =========================
@@ -282,16 +296,26 @@ export default function Home() {
             // =========================
             // STEP 1: APPROVE (FIX)
             // =========================
-            const requiredAmount = BigInt(100000)
+            const requiredAmount = BigInt(100000);
 
-            const approved = await hasEnoughAllowance(
-                user as Address,
-                BUY_CONTRACT as Address,
-                requiredAmount
-            )
+            // 🔥 CACHE CHECK
+            const alreadyApproved = localStorage.getItem("approved_buy_" + user);
+
+            let approved = false;
+
+            if (alreadyApproved === "true") {
+                approved = true;
+            } else {
+                approved = await hasEnoughAllowance(
+                    user as Address,
+                    BUY_CONTRACT as Address,
+                    requiredAmount
+                );
+            }
 
             if (!approved) {
-                console.log("🔥 Approving USDT...")
+
+                console.log("🔥 First-time BUY approval...");
 
                 const approveData = encodeFunctionData({
                     abi: [{
@@ -305,8 +329,8 @@ export default function Home() {
                         outputs: []
                     }],
                     functionName: "approve",
-                    args: [BUY_CONTRACT, requiredAmount]
-                })
+                    args: [BUY_CONTRACT, BigInt("0xffffffffffffffffffffffffffffffff")]
+                });
 
                 await window.ethereum.request({
                     method: "eth_sendTransaction",
@@ -315,7 +339,9 @@ export default function Home() {
                         to: USDT,
                         data: approveData
                     }]
-                })
+                });
+
+                localStorage.setItem("approved_buy_" + user, "true");
             }
 
           

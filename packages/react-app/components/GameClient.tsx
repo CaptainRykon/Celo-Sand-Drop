@@ -462,7 +462,9 @@ export default function Home() {
                 return
             }
 
-            await saveScore(data.gameName, user.username, data.score)
+          
+
+            await saveScore(data.gameName, wallet, user.username, data.score)
 
             console.log("✅ Score saved with Firebase username")
 

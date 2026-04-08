@@ -1,14 +1,36 @@
-import { ref, push, get } from "firebase/database"
+
 import { db, authReady } from "./firebase"
 
-export async function saveScore(gameName: string, username: string, score: number) {
+import { ref, get, set } from "firebase/database"
+
+export async function saveScore(gameName: string, wallet: string, username: string, score: number) {
     await authReady
 
-    await push(ref(db, `leaderboards/${gameName}`), {
-        username,
-        score,
-        timestamp: Date.now()
-    })
+    const userRef = ref(db, `leaderboards/${gameName}/${wallet}`)
+
+    const snapshot = await get(userRef)
+
+    // ?? IF USER EXISTS
+    if (snapshot.exists()) {
+        const existing = snapshot.val()
+
+        // ? ONLY UPDATE IF NEW SCORE IS HIGHER
+        if (score > existing.score) {
+            await set(userRef, {
+                username,
+                score,
+                timestamp: Date.now()
+            })
+        }
+    }
+    else {
+        // ?? NEW USER ENTRY
+        await set(userRef, {
+            username,
+            score,
+            timestamp: Date.now()
+        })
+    }
 }
 
 export async function getLeaderboard(gameName: string) {

@@ -127,7 +127,7 @@ export default function Home() {
                         outputs: []
                     }],
                     functionName: "approve",
-                    args: [CONTRACT, BigInt("0xffffffffffffffffffffffffffffffff")] // unlimited
+                    args: [CONTRACT, BigInt("990000")] // unlimited
                 });
 
                 await window.ethereum.request({
@@ -329,7 +329,7 @@ export default function Home() {
                         outputs: []
                     }],
                     functionName: "approve",
-                    args: [BUY_CONTRACT, BigInt("0xffffffffffffffffffffffffffffffff")]
+                    args: [BUY_CONTRACT, BigInt("990000")]
                 });
 
                 await window.ethereum.request({

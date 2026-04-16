@@ -41,6 +41,40 @@
             display: block;
             background: #fff;
         }
+
+        #unity-loading-bar {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            max-width: 300px;
+            z-index: 10000;
+        }
+
+        #unity-progress-bar-empty {
+            width: 100%;
+            height: 6px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #unity-progress-bar-full {
+            width: 0%;
+            height: 100%;
+            background: #000;
+            transition: width 0.2s ease;
+        }
+
+        #loading-text {
+            text-align: center;
+            font-size: 12px;
+            color: #555;
+            margin-top: 6px;
+        }
+
+
     </style>
 </head>
 
@@ -58,6 +92,7 @@
             <div id="unity-progress-bar-empty">
                 <div id="unity-progress-bar-full"></div>
             </div>
+            <div id="loading-text">Loading game...</div>
         </div>
 
         <div id="unity-warning"></div>
@@ -98,10 +133,10 @@
 
 
         var buildUrl = "Build";
-        var loaderUrl = buildUrl + "/2eb1b33f7c4b5aa4dc6b1056fb33fa76.loader.js";
+        var loaderUrl = buildUrl + "/b7a3f0884b48b8cb436a7e6476a18791.loader.js";
         var config = {
             arguments: [],
-            dataUrl: buildUrl + "/c14c1ce1d87afaab1235e7e19aaf0b11.data",
+            dataUrl: buildUrl + "/4221a8bdda350bd8a4918402c7c181bb.data",
             frameworkUrl: buildUrl + "/aae0786fd8f24e475f83a0221a123f3d.framework.js",
             codeUrl: buildUrl + "/6b868e9332783f270f9ee4971484033b.wasm",
             streamingAssetsUrl: "StreamingAssets",

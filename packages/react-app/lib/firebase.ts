@@ -6,19 +6,18 @@ import { getDatabase } from "firebase/database";
 
 
 
+// =========================
+// 🔥 ENV CONFIG
+// =========================
 const firebaseConfig = {
-    apiKey: "AIzaSyBvv2vMLgacfTYA-vjO9-o4NdVuMO64N3s",
-    authDomain: "sanddrop-32496.firebaseapp.com",
-    projectId: "sanddrop-32496",
-
-    // 🔥 ADD THIS (MOST IMPORTANT)
-    databaseURL: "https://sanddrop-32496-default-rtdb.asia-southeast1.firebasedatabase.app",
-
-
-    storageBucket: "sanddrop-32496.firebasestorage.app",
-    messagingSenderId: "220945597047",
-    appId: "1:220945597047:web:1ea931fb68294dc31ffc72",
-    measurementId: "G-048ZVGK2PW"
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL!,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID!,
 };
 
 

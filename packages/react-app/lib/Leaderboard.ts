@@ -44,5 +44,5 @@ export async function getLeaderboard(gameName: string) {
 
     return Object.values(data)
         .sort((a: any, b: any) => b.score - a.score)
-        .slice(0, 10)
+        .slice(0, 50)
 }

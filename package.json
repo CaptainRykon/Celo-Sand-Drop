@@ -28,6 +28,7 @@
     "celo"
   ],
   "dependencies": {
+    "ethers": "^6.16.0",
     "firebase": "^12.10.0"
   }
 }

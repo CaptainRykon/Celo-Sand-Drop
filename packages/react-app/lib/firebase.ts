@@ -1,15 +1,21 @@
 // src/lib/firebase.ts
-import { initializeApp } from "firebase/app";
+
+import { initializeApp, getApps } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 
+let app: any = null;
+let db: any = null;
+let auth: any = null;
+let authReady: Promise<void> | null = null;
 
+// ✅ Function-based init (NOT auto-run)
+export function initFirebase() {
+  if (typeof window === "undefined") return;
 
+  if (app) return; // already initialized
 
-// =========================
-// 🔥 ENV CONFIG
-// =========================
-const firebaseConfig = {
+  const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
@@ -17,34 +23,30 @@ const firebaseConfig = {
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID!,
-};
+  };
 
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const db = getDatabase(app);
-export const auth = getAuth(app);
+  db = getDatabase(app);
+  auth = getAuth(app);
 
-// ------------------------------------------------------------
-// 🔥 WAIT FOR AUTH BEFORE ALLOWING DATABASE ACCESS
-// ------------------------------------------------------------
+  let resolveAuthReady!: () => void;
 
-let resolveAuthReady: () => void;
-export const authReady = new Promise<void>((resolve) => {
+  authReady = new Promise<void>((resolve) => {
     resolveAuthReady = resolve;
-});
+  });
 
-// Start Anonymous Login
-signInAnonymously(auth).catch((err) => {
-    console.error("❌ Anonymous auth failed:", err);
-});
+  signInAnonymously(auth).catch(console.error);
 
-// When auth finishes → unlock database
-onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, (user) => {
     if (user) {
-        console.log("✔ Firebase Anonymous Auth Ready → UID:", user.uid);
-        console.log("AUTH STATE:", user);
-        resolveAuthReady();
+      console.log("✔ Firebase Ready:", user.uid);
+      resolveAuthReady();
     }
-});
+  });
+}
+
+// ✅ getters (safe)
+export function getFirebase() {
+  return { app, db, auth, authReady };
+}

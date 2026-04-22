@@ -1,5 +1,5 @@
 ﻿import { ref, get, set, update } from "firebase/database"
-import { db, authReady } from "./firebase"
+import { initFirebase, getFirebase } from "./firebase"
 
 function getMidnight() {
     const d = new Date()
@@ -14,6 +14,9 @@ function getNextMidnight() {
 }
 
 export async function initUser(wallet: string, username: string) {
+    await initFirebase()
+
+    const { db, authReady } = getFirebase()
     await authReady
 
     console.log("🔥 INIT USER CALLED:", wallet)
@@ -22,20 +25,19 @@ export async function initUser(wallet: string, username: string) {
     const snap = await get(userRef)
 
     if (!snap.exists()) {
-        console.log("🆕 Creating user in Firebase")
-
         await set(userRef, {
             username,
             chances: 1,
             lastReset: getMidnight()
         })
-
-        console.log("✅ User created")
     }
 }
 
 // ✅ GET USER + DAILY RESET
 export async function getUser(wallet: string) {
+    await initFirebase()
+
+    const { db, authReady } = getFirebase()
     await authReady
 
     const userRef = ref(db, `users/${wallet}`)
@@ -64,6 +66,9 @@ export async function getUser(wallet: string) {
 
 // ✅ USE CHANCE
 export async function consumeChance(wallet: string) {
+    await initFirebase()
+
+    const { db, authReady } = getFirebase()
     await authReady
 
     const userRef = ref(db, `users/${wallet}`)
@@ -80,8 +85,10 @@ export async function consumeChance(wallet: string) {
     return true
 }
 
-
 export async function updateUsername(wallet: string, username: string) {
+    await initFirebase()
+
+    const { db, authReady } = getFirebase()
     await authReady
 
     const userRef = ref(db, `users/${wallet}`)
@@ -91,9 +98,11 @@ export async function updateUsername(wallet: string, username: string) {
     })
 }
 
-
-// ✅ ADD CHANCES (SHOP)
+// ✅ ADD CHANCES
 export async function addChances(wallet: string, amount: number) {
+    await initFirebase()
+
+    const { db, authReady } = getFirebase()
     await authReady
 
     const userRef = ref(db, `users/${wallet}`)

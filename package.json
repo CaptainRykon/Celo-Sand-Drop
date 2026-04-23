@@ -32,6 +32,7 @@
     "firebase": "^12.10.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.19.3",
     "@types/node": "^22.19.15"
   }
 }

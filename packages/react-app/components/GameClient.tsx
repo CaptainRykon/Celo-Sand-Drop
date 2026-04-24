@@ -522,7 +522,7 @@ export default function Home() {
             overflow: "hidden"
         }}>
             <iframe
-                src="/game/index.html"
+                src="https://pub-9a26c23caef04b618b5b21bbfc1be6b9.r2.dev/public/game/index.html"
                 style={{
                     width: "100%",
                     height: "100%",

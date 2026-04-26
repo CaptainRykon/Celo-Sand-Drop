@@ -1,0 +1,39 @@
+import { NextResponse } from "next/server"
+import { db } from "@/lib/firebase-admin"
+
+export async function POST(req: Request) {
+    try {
+        const body = await req.json()
+        const { wallet, amount } = body
+
+        if (!wallet || typeof amount !== "number") {
+            return NextResponse.json({ error: "Invalid data" }, { status: 400 })
+        }
+
+        const ref = db.ref(`users/${wallet}`)
+        const snap = await ref.get()
+
+        if (!snap.exists()) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 })
+        }
+
+        const data = snap.val()
+
+        // ?? HARD LIMIT (IMPORTANT)
+        let newChances = (data.chances || 0) + amount
+
+        if (newChances > 12) {
+            newChances = 12
+        }
+
+        await ref.update({
+            chances: newChances
+        })
+
+        return NextResponse.json({ success: true, chances: newChances })
+
+    } catch (err) {
+        console.error(err)
+        return NextResponse.json({ error: "Server error" }, { status: 500 })
+    }
+}

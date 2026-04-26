@@ -271,7 +271,13 @@ export default function Home() {
 
         const wallet = await getWallet()
 
-        await addChances(wallet, CHANCE_REWARD)
+        await fetch("/api/addChances", {
+            method: "POST",
+            body: JSON.stringify({
+                wallet,
+                amount: CHANCE_REWARD
+            })
+        })
 
         // 🔥 GET UPDATED USER DATA
         const updated = await getUser(wallet)

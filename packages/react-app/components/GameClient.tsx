@@ -4,12 +4,34 @@ import { saveScore, getLeaderboard } from "@/lib/Leaderboard"
 import { encodeFunctionData } from "viem"
 import { initUser, getUser, consumeChance, addChances, updateUsername } from "@/lib/chances"
 import type { Address } from "viem"
+import { initFirebase } from "@/lib/firebase"
 const CONTRACT: Address = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
 const USDT: Address = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
 let unityListenerAttached = false
 
 export default function Home() {
 
+    useEffect(() => {
+        initFirebase()
+
+        const preload = async () => {
+            try {
+                await handleGetUser()
+            } catch (e) {
+                console.log("Preload failed:", e)
+            }
+        }
+
+        preload()
+
+    }, [])
+
+    useEffect(() => {
+        const ethereum = getEthereum()
+        if (ethereum) {
+            ethereum.request({ method: "eth_accounts" })
+        }
+    }, [])
     function getEthereum() {
         if (typeof window === "undefined") return null
         return (window as any).ethereum

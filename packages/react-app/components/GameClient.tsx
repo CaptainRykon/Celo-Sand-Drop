@@ -239,7 +239,11 @@ export default function Home() {
     async function handleUseChance() {
         const wallet = await getWallet()
 
-        const success = await consumeChance(wallet)
+        const success = await fetch("/api/useChance", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ wallet })
+        })
 
         if (!success) {
             sendToUnity("OnChanceUsed", "0")

@@ -51,11 +51,6 @@ export async function getUser(wallet: string) {
     if (data.lastReset < today) {
         data.chances = 1
         data.lastReset = today
-
-        await update(userRef, {
-            chances: 1,
-            lastReset: today
-        })
     }
 
     return {

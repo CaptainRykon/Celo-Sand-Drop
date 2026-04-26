@@ -1,5 +1,4 @@
 ﻿"use client"
-
 import { useEffect } from "react"
 import { saveScore, getLeaderboard } from "@/lib/Leaderboard"
 import { encodeFunctionData } from "viem"
@@ -7,8 +6,8 @@ import { initUser, getUser, consumeChance, addChances, updateUsername } from "@/
 import type { Address } from "viem"
 const CONTRACT: Address = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
 const USDT: Address = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
-
-
+let unityListenerAttached = false
+const ethereum = (window as any).ethereum
 export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
@@ -68,9 +67,9 @@ export default function Home() {
             // =========================
             // 1. GET WALLET (NO POPUP DELAY)
             // =========================
-            const accounts = await window.ethereum.request({
+            const accounts = await ethereum.request({
                 method: "eth_accounts"
-            });
+            }) as Address[]
 
             if (!accounts || accounts.length === 0) {
                 throw new Error("Wallet not connected");
@@ -81,7 +80,7 @@ export default function Home() {
             // =========================
             // 2. NETWORK CHECK (FAST)
             // =========================
-            const chainId = await window.ethereum.request({
+            const chainId = await ethereum.request({
                 method: "eth_chainId"
             });
 
@@ -130,7 +129,7 @@ export default function Home() {
                     args: [CONTRACT, BigInt("990000")] // unlimited
                 });
 
-                await window.ethereum.request({
+                await ethereum.request({
                     method: "eth_sendTransaction",
                     params: [{
                         from: user,
@@ -161,7 +160,7 @@ export default function Home() {
             // =========================
             // 5. 🚀 TRIGGER POPUP ASAP
             // =========================
-            const tx = await window.ethereum.request({
+            const tx = await ethereum.request({
                 method: "eth_sendTransaction",
                 params: [{
                     from: user,
@@ -196,12 +195,12 @@ export default function Home() {
 
         let accounts = await window.ethereum.request({
             method: "eth_accounts"
-        })
+        }) as Address[] | undefined
 
         if (!accounts || accounts.length === 0) {
             accounts = await window.ethereum.request({
                 method: "eth_requestAccounts"
-            })
+            }) as Address[] | undefined
         }
 
         if (!accounts || accounts.length === 0) {
@@ -218,34 +217,43 @@ export default function Home() {
 
     async function handleGetUser() {
         const wallet = await getWallet()
-        const data = await getUser(wallet)
 
+        let data = await getUser(wallet)
+
+        // 🔥 If user doesn't exist → create via API
         if (!data) {
-           
+            await fetch("/api/initUser", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    wallet,
+                    username: "Guest"
+                })
+            })
 
-            await handleInitUser({ username: "Guest" })
-
-            const retry = await getUser(wallet)
-
-            sendToUnity("OnUserData", JSON.stringify(retry))
-            return
+            // 🔥 fetch again
+            data = await getUser(wallet)
         }
 
-        // ✅ THIS WAS MISSING
-        sendToUnity("OnUserData", JSON.stringify(data))
+        // ✅ ALWAYS send correct data
+        if (data) {
+            sendToUnity("OnUserData", JSON.stringify(data))
+        }
     }
 
 
     async function handleUseChance() {
         const wallet = await getWallet()
 
-        const success = await fetch("/api/useChance", {
+        const res = await fetch("/api/useChance", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ wallet })
         })
 
-        if (!success) {
+        if (!res.ok) {
             sendToUnity("OnChanceUsed", "0")
             return
         }
@@ -299,7 +307,7 @@ export default function Home() {
         try {
            
 
-            const [user] = await window.ethereum.request({
+            const [user] = await ethereum.request({
                 method: "eth_requestAccounts"
             })
 
@@ -342,7 +350,7 @@ export default function Home() {
                     args: [BUY_CONTRACT, BigInt("990000")]
                 });
 
-                await window.ethereum.request({
+                await ethereum.request({
                     method: "eth_sendTransaction",
                     params: [{
                         from: user,
@@ -367,7 +375,7 @@ export default function Home() {
 
            
 
-            const tx = await window.ethereum.request({
+            const tx = await ethereum.request({
                 method: "eth_sendTransaction",
                 params: [{
                     from: user,
@@ -400,7 +408,7 @@ export default function Home() {
         const maxAttempts = 30; // ⛔ prevent infinite loop
 
         while (attempts < maxAttempts) {
-            const receipt = await window.ethereum.request({
+            const receipt = await ethereum.request({
                 method: "eth_getTransactionReceipt",
                 params: [txHash]
             });
@@ -447,7 +455,7 @@ export default function Home() {
             args: [user, spender]
         })
 
-        const result = await window.ethereum.request({
+        const result = await ethereum.request({
             method: "eth_call",
             params: [{
                 to: USDT,
@@ -455,7 +463,7 @@ export default function Home() {
             }, "latest"]
         })
 
-        return BigInt(result) >= amount
+        return BigInt(result as string) >= amount
     }
 
 

@@ -113,7 +113,7 @@ export default function Home() {
             // 🔥 IF NOT APPROVED → DO APPROVE ONCE
             if (!approved) {
 
-                console.log("🔥 First-time approval...");
+               
 
                 const approveData = encodeFunctionData({
                     abi: [{
@@ -182,7 +182,7 @@ export default function Home() {
 
         } catch (err: any) {
 
-            console.error("❌ Payment failed:", err);
+            
 
             sendToUnity("OnPaymentFailed", err?.message || "FAILED");
         }
@@ -221,7 +221,7 @@ export default function Home() {
         const data = await getUser(wallet)
 
         if (!data) {
-            console.warn("User not found → reinitializing")
+           
 
             await handleInitUser({ username: "Guest" })
 
@@ -287,7 +287,7 @@ export default function Home() {
 
         if (typeof window === "undefined") return; // ✅ FIX
         try {
-            console.log("🔥 Starting Buy Payment");
+           
 
             const [user] = await window.ethereum.request({
                 method: "eth_requestAccounts"
@@ -315,7 +315,7 @@ export default function Home() {
 
             if (!approved) {
 
-                console.log("🔥 First-time BUY approval...");
+                
 
                 const approveData = encodeFunctionData({
                     abi: [{
@@ -355,7 +355,7 @@ export default function Home() {
                 args: []
             })
 
-            console.log("🔥 Sending Pay TX...");
+           
 
             const tx = await window.ethereum.request({
                 method: "eth_sendTransaction",
@@ -366,15 +366,15 @@ export default function Home() {
                 }]
             })
 
-            console.log("🔥 TX SENT:", tx);
+            
 
             await waitForTx(tx)
 
-            console.log("🔥 PAYMENT SUCCESS");
+           
 
             return true
         } catch (err: any) {
-            console.error("❌ BUY FAILED:", err);
+          
 
             // 🔥 SEND FAILURE TO UNITY
             sendToUnity("OnPurchaseFailed", err?.message || "FAILED")
@@ -458,20 +458,31 @@ export default function Home() {
             const user = await getUser(wallet)
 
             if (!user || !user.username) {
-                console.error("❌ Username missing from Firebase")
+               
                 return
             }
 
           
 
-            await saveScore(data.gameName, wallet, user.username, data.score)
+            await fetch("/api/saveScore", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    gameName: data.gameName,
+                    wallet,
+                    username: user.username,
+                    score: data.score
+                })
+            })
 
-            console.log("✅ Score saved with Firebase username")
+            
 
             sendToUnity("OnLeaderboardSaved", "")
 
         } catch (err: any) {
-            console.error("❌ Payment failed:", err);
+           
 
             sendToUnity("OnPaymentFailed", err?.message || "FAILED")
         }
@@ -485,12 +496,12 @@ export default function Home() {
         try {
             const leaderboard = await getLeaderboard(data.gameName)
 
-            console.log("?? Leaderboard:", leaderboard)
+           
 
             sendToUnity("OnLeaderboardReceived", JSON.stringify(leaderboard))
 
         } catch (err) {
-            console.log("? Fetch leaderboard failed:", err)
+           
         }
     }
 

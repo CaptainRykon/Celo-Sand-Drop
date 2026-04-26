@@ -26,7 +26,8 @@
     ],
     "dependencies": {
         "ethers": "^6.16.0",
-        "firebase": "^12.10.0"
+        "firebase": "^12.10.0",
+        "firebase-admin": "^13.8.0"
     },
     "devDependencies": {
         "@opennextjs/cloudflare": "^1.19.3",

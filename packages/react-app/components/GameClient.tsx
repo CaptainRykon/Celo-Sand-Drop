@@ -24,7 +24,7 @@ export default function Home() {
         }
 
         const handleUnityMessage = async (event: any) => {
-            const data = event.dataa
+            const data = event.data
             if (!data) return
 
             switch (data.type) {

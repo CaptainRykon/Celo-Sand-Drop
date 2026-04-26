@@ -7,17 +7,24 @@ import type { Address } from "viem"
 const CONTRACT: Address = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
 const USDT: Address = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
 let unityListenerAttached = false
-const ethereum = (window as any).ethereum
+
 export default function Home() {
+
+    function getEthereum() {
+        if (typeof window === "undefined") return null
+        return (window as any).ethereum
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (typeof window === "undefined") return; // 🚀 CRITICAL FIX
-        if (typeof window !== "undefined" && window.ethereum) {
-            window.ethereum.request({ method: "eth_accounts" });
+        const ethereum = getEthereum()
+        if (ethereum) {
+            ethereum.request({ method: "eth_accounts" })
         }
 
         const handleUnityMessage = async (event: any) => {
-            const data = event.data
+            const data = event.dataa
             if (!data) return
 
             switch (data.type) {
@@ -55,7 +62,7 @@ export default function Home() {
         }
 
     }, [])
-
+    
     // =========================
     // ?? PAYMENT FUNCTION
     // =========================
@@ -67,6 +74,9 @@ export default function Home() {
             // =========================
             // 1. GET WALLET (NO POPUP DELAY)
             // =========================
+            const ethereum = getEthereum()
+            if (!ethereum) return
+
             const accounts = await ethereum.request({
                 method: "eth_accounts"
             }) as Address[]
@@ -307,9 +317,18 @@ export default function Home() {
         try {
            
 
-            const [user] = await ethereum.request({
+            const ethereum = getEthereum()
+            if (!ethereum) return false
+
+            const accounts = await ethereum.request({
                 method: "eth_requestAccounts"
-            })
+            }) as Address[]
+
+            if (!accounts || accounts.length === 0) {
+                throw new Error("No account")
+            }
+
+            const user = accounts[0]
 
             // =========================
             // STEP 1: APPROVE (FIX)
@@ -408,10 +427,13 @@ export default function Home() {
         const maxAttempts = 30; // ⛔ prevent infinite loop
 
         while (attempts < maxAttempts) {
+            const ethereum = getEthereum()
+            if (!ethereum) throw new Error("No wallet")
+
             const receipt = await ethereum.request({
                 method: "eth_getTransactionReceipt",
                 params: [txHash]
-            });
+            })
 
             if (receipt) return receipt;
 
@@ -454,6 +476,9 @@ export default function Home() {
             functionName: "allowance",
             args: [user, spender]
         })
+
+        const ethereum = getEthereum()
+        if (!ethereum) throw new Error("No wallet")
 
         const result = await ethereum.request({
             method: "eth_call",

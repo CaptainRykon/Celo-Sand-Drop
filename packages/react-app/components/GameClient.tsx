@@ -250,30 +250,66 @@ export default function Home() {
         await initUser(wallet, data.username)
     }
 
+
+    async function getWalletSafe(): Promise<Address | null> {
+        if (typeof window === "undefined" || !(window as any).ethereum) {
+            return null
+        }
+
+        try {
+            const accounts = await (window as any).ethereum.request({
+                method: "eth_accounts"
+            }) as Address[]
+
+            if (!accounts || accounts.length === 0) {
+                return null // ❗ NO POPUP
+            }
+
+            return accounts[0]
+        } catch (e) {
+            console.log("getWalletSafe error:", e)
+            return null
+        }
+    }
+
     async function handleGetUser() {
-        const wallet = await getWallet()
+        const wallet = await getWalletSafe()
+
+        if (!wallet) {
+            sendToUnity("OnUserData", JSON.stringify({
+                username: "Guest",
+                chances: 1,
+                nextReset: Date.now() + 86400000
+            }))
+            return
+        }
 
         let data = await getUser(wallet)
 
+        // 🔥 TRY INIT BUT DO NOT TRUST IT
         if (!data) {
-            const savedName = localStorage.getItem("username") || "Guest"
+            try {
+                await fetch("/api/initUser", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        wallet,
+                        username: localStorage.getItem("username") || "Guest"
+                    })
+                })
+            } catch (e) {
+                console.log("initUser failed", e)
+            }
 
-            await fetch("/api/initUser", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ wallet, username: savedName })
-            })
-
-            // 🔥 RETRY LOOP (IMPORTANT)
-            let attempts = 0
-            while (!data && attempts < 5) {
-                await new Promise(r => setTimeout(r, 300))
+            // 🔥 RETRY WITH LIMIT
+            for (let i = 0; i < 3; i++) {
+                await new Promise(r => setTimeout(r, 200))
                 data = await getUser(wallet)
-                attempts++
+                if (data) break
             }
         }
 
-        // ❗ ALWAYS SEND SOMETHING (even fallback)
+        // 🔥 ALWAYS SEND FALLBACK
         if (!data) {
             data = {
                 username: "Guest",

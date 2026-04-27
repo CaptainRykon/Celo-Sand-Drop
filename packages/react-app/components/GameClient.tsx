@@ -260,21 +260,29 @@ export default function Home() {
 
             await fetch("/api/initUser", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    wallet,
-                    username: savedName
-                })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ wallet, username: savedName })
             })
 
-            data = await getUser(wallet)
+            // 🔥 RETRY LOOP (IMPORTANT)
+            let attempts = 0
+            while (!data && attempts < 5) {
+                await new Promise(r => setTimeout(r, 300))
+                data = await getUser(wallet)
+                attempts++
+            }
         }
 
-        if (data) {
-            sendToUnity("OnUserData", JSON.stringify(data))
+        // ❗ ALWAYS SEND SOMETHING (even fallback)
+        if (!data) {
+            data = {
+                username: "Guest",
+                chances: 1,
+                nextReset: Date.now() + 86400000
+            }
         }
+
+        sendToUnity("OnUserData", JSON.stringify(data))
     }
 
 
@@ -294,11 +302,11 @@ export default function Home() {
             return
         }
 
-        // 🔥 WAIT FOR DB SYNC
-        await new Promise(r => setTimeout(r, 300))
+        // ✅ IMMEDIATE SUCCESS SIGNAL
+        sendToUnity("OnChanceUsed", "1")
 
+        // THEN sync data
         const updated = await getUser(wallet)
-
         sendToUnity("OnUserData", JSON.stringify(updated))
     }
 

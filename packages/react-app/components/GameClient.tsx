@@ -7,10 +7,13 @@ import type { Address } from "viem"
 import { initFirebase } from "@/lib/firebase"
 const CONTRACT: Address = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
 const USDT: Address = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
-let unityListenerAttached = false
-const userLoaded = useRef(false)
+
+
 export default function Home() {
 
+    const userLoaded = useRef(false)
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         initFirebase()
 

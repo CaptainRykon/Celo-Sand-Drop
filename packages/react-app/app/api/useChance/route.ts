@@ -13,9 +13,12 @@ export async function POST(req: Request) {
 
         const ref = db.ref(`users/${wallet}`)
         const snap = await ref.get()
-
         if (!snap.exists()) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 })
+            await ref.set({
+                username: "Guest",
+                chances: 1,
+                lastReset: getMidnight()
+            })
         }
 
         let data = snap.val()

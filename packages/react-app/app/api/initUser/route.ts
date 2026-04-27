@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
         // ? Only create if NOT exists
         if (!snap.exists()) {
-            await ref.set({
+            await ref.update({
                 username,
                 chances: 1,
                 lastReset: getMidnight()

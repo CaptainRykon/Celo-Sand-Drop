@@ -278,7 +278,6 @@ export default function Home() {
     }
 
 
-
     async function handleUseChance() {
         const wallet = await getWallet()
 
@@ -288,15 +287,18 @@ export default function Home() {
             body: JSON.stringify({ wallet })
         })
 
-        if (!res.ok) {
+        const result = await res.json()
+
+        if (!result.success) {
             sendToUnity("OnChanceUsed", "0")
             return
         }
 
-        // 🔥 GET UPDATED USER DATA
+        // 🔥 WAIT FOR DB SYNC
+        await new Promise(r => setTimeout(r, 300))
+
         const updated = await getUser(wallet)
 
-        // 🔥 SEND FULL DATA BACK TO UNITY
         sendToUnity("OnUserData", JSON.stringify(updated))
     }
 

@@ -1,25 +1,45 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/firebase-admin"
 
+function getMidnight() {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d.getTime()
+}
+
 export async function POST(req: Request) {
-    const { wallet } = await req.json()
+    try {
+        const { wallet } = await req.json()
 
-    const ref = db.ref(`users/${wallet}`)
-    const snap = await ref.get()
+        const ref = db.ref(`users/${wallet}`)
+        const snap = await ref.get()
 
-    if (!snap.exists()) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 })
+        if (!snap.exists()) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 })
+        }
+
+        let data = snap.val()
+        const today = getMidnight()
+
+        // ?? DAILY RESET (MOVED TO BACKEND)
+        if (data.lastReset < today) {
+            data.chances = 1
+            data.lastReset = today
+        }
+
+        if (data.chances <= 0) {
+            return NextResponse.json({ success: false })
+        }
+
+        await ref.update({
+            chances: data.chances - 1,
+            lastReset: data.lastReset
+        })
+
+        return NextResponse.json({ success: true })
+
+    } catch (err) {
+        console.error(err)
+        return NextResponse.json({ error: "Server error" }, { status: 500 })
     }
-
-    const data = snap.val()
-
-    if (data.chances <= 0) {
-        return NextResponse.json({ success: false })
-    }
-
-    await ref.update({
-        chances: data.chances - 1
-    })
-
-    return NextResponse.json({ success: true })
 }

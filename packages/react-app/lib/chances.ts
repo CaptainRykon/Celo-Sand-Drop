@@ -1,11 +1,5 @@
-﻿import { ref, get, set, update } from "firebase/database"
+﻿import { ref, get } from "firebase/database"
 import { initFirebase, getFirebase } from "./firebase"
-
-function getMidnight() {
-    const d = new Date()
-    d.setHours(0, 0, 0, 0)
-    return d.getTime()
-}
 
 function getNextMidnight() {
     const d = new Date()
@@ -13,27 +7,7 @@ function getNextMidnight() {
     return d.getTime()
 }
 
-export async function initUser(wallet: string, username: string) {
-    await initFirebase()
-
-    const { db, authReady } = getFirebase()
-    await authReady
-
-    console.log("🔥 INIT USER CALLED:", wallet)
-
-    const userRef = ref(db, `users/${wallet}`)
-    const snap = await get(userRef)
-
-    if (!snap.exists()) {
-        await set(userRef, {
-            username,
-            chances: 1,
-            lastReset: getMidnight()
-        })
-    }
-}
-
-// ✅ GET USER + DAILY RESET
+// ✅ GET USER (READ ONLY)
 export async function getUser(wallet: string) {
     await initFirebase()
 
@@ -43,26 +17,9 @@ export async function getUser(wallet: string) {
     const userRef = ref(db, `users/${wallet}`)
     const snap = await get(userRef)
 
-    if (!snap.exists()) {
-        return {
-            username: null,
-            chances: 0,
-            nextReset: getNextMidnight()
-        }
-    }
+    if (!snap.exists()) return null
 
-    let data = snap.val()
-    const today = getMidnight()
-
-    if (data.lastReset < today) {
-        await update(userRef, {
-            chances: 1,
-            lastReset: today
-        })
-
-        data.chances = 1
-        data.lastReset = today
-    }
+    const data = snap.val()
 
     return {
         ...data,
@@ -70,57 +27,47 @@ export async function getUser(wallet: string) {
     }
 }
 
-// ✅ USE CHANCE
+// ✅ INIT USER (API)
+export async function initUser(wallet: string, username: string) {
+    await fetch("/api/initUser", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet, username })
+    })
+}
+
+// ✅ USE CHANCE (API)
 export async function consumeChance(wallet: string) {
-    await initFirebase()
-
-    const { db, authReady } = getFirebase()
-    await authReady
-
-    const userRef = ref(db, `users/${wallet}`)
-    const snap = await get(userRef)
-
-    let data = snap.val()
-
-    if (data.chances <= 0) return null
-
-    await update(userRef, {
-        chances: data.chances - 1
+    const res = await fetch("/api/useChance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet })
     })
 
-    const updated = await getUser(wallet)
+    const data = await res.json()
 
-    return updated // ✅ return data instead
+    if (!data.success) return null
+
+    // 🔥 ALWAYS REFETCH AFTER UPDATE
+    return await getUser(wallet)
 }
 
-
-
+// ✅ UPDATE USERNAME (API)
 export async function updateUsername(wallet: string, username: string) {
-    await initFirebase()
-
-    const { db, authReady } = getFirebase()
-    await authReady
-
-    const userRef = ref(db, `users/${wallet}`)
-
-    await update(userRef, {
-        username: username
+    await fetch("/api/updateUsername", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet, username })
     })
 }
 
-// ✅ ADD CHANCES
+// ✅ ADD CHANCES (API)
 export async function addChances(wallet: string, amount: number) {
-    await initFirebase()
-
-    const { db, authReady } = getFirebase()
-    await authReady
-
-    const userRef = ref(db, `users/${wallet}`)
-    const snap = await get(userRef)
-
-    let data = snap.val()
-
-    await update(userRef, {
-        chances: (data.chances || 0) + amount
+    const res = await fetch("/api/addChance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet, amount })
     })
+
+    return await res.json()
 }

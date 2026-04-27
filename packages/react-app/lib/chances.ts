@@ -43,7 +43,13 @@ export async function getUser(wallet: string) {
     const userRef = ref(db, `users/${wallet}`)
     const snap = await get(userRef)
 
-    if (!snap.exists()) return null
+    if (!snap.exists()) {
+        return {
+            username: null,
+            chances: 0,
+            nextReset: getNextMidnight()
+        }
+    }
 
     let data = snap.val()
     const today = getMidnight()

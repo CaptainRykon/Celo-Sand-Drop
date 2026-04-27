@@ -251,10 +251,6 @@ export default function Home() {
     }
 
     async function handleGetUser() {
-        if (userLoaded.current) return
-
-        userLoaded.current = true
-
         const wallet = await getWallet()
 
         let data = await getUser(wallet)
@@ -280,6 +276,9 @@ export default function Home() {
             sendToUnity("OnUserData", JSON.stringify(data))
         }
     }
+
+
+
     async function handleUseChance() {
         const wallet = await getWallet()
 

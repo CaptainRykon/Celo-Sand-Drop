@@ -49,6 +49,11 @@ export async function getUser(wallet: string) {
     const today = getMidnight()
 
     if (data.lastReset < today) {
+        await update(userRef, {
+            chances: 1,
+            lastReset: today
+        })
+
         data.chances = 1
         data.lastReset = today
     }
@@ -71,14 +76,18 @@ export async function consumeChance(wallet: string) {
 
     let data = snap.val()
 
-    if (data.chances <= 0) return false
+    if (data.chances <= 0) return null
 
     await update(userRef, {
         chances: data.chances - 1
     })
 
-    return true
+    const updated = await getUser(wallet)
+
+    return updated // ✅ return data instead
 }
+
+
 
 export async function updateUsername(wallet: string, username: string) {
     await initFirebase()

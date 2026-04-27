@@ -1,5 +1,5 @@
 ﻿"use client"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { saveScore, getLeaderboard } from "@/lib/Leaderboard"
 import { encodeFunctionData } from "viem"
 import { initUser, getUser, consumeChance, addChances, updateUsername } from "@/lib/chances"
@@ -8,7 +8,7 @@ import { initFirebase } from "@/lib/firebase"
 const CONTRACT: Address = "0xafFb98DeCfc3e1E7867fA412Bf9580E377bE265a"
 const USDT: Address = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
 let unityListenerAttached = false
-
+const userLoaded = useRef(false)
 export default function Home() {
 
     useEffect(() => {
@@ -248,12 +248,17 @@ export default function Home() {
     }
 
     async function handleGetUser() {
+        if (userLoaded.current) return
+
+        userLoaded.current = true
+
         const wallet = await getWallet()
 
         let data = await getUser(wallet)
 
-        // 🔥 If user doesn't exist → create via API
         if (!data) {
+            const savedName = localStorage.getItem("username") || "Guest"
+
             await fetch("/api/initUser", {
                 method: "POST",
                 headers: {
@@ -261,21 +266,17 @@ export default function Home() {
                 },
                 body: JSON.stringify({
                     wallet,
-                    username: "Guest"
+                    username: savedName
                 })
             })
 
-            // 🔥 fetch again
             data = await getUser(wallet)
         }
 
-        // ✅ ALWAYS send correct data
         if (data) {
             sendToUnity("OnUserData", JSON.stringify(data))
         }
     }
-
-
     async function handleUseChance() {
         const wallet = await getWallet()
 
@@ -466,13 +467,14 @@ export default function Home() {
         throw new Error("Transaction timeout");
     }
 
-
     async function handleUpdateUsername(data: any) {
         const wallet = await getWallet()
 
         await updateUsername(wallet, data.username)
 
-        // 🔥 Send updated data back
+        // 🔥 SAVE LOCALLY (CRITICAL)
+        localStorage.setItem("username", data.username)
+
         const updated = await getUser(wallet)
 
         sendToUnity("OnUserData", JSON.stringify(updated))
@@ -598,7 +600,7 @@ export default function Home() {
             overflow: "hidden"
         }}>
             <iframe
-                src="https://pub-2e7eadf79fa543a6b835b6c878ef2689.r2.dev/public/game/index.html"
+                src="https://pub-972cb3908e9240d1b774ec45b0a3af19.r2.dev/public/game/index.html"
                 style={{
                     width: "100%",
                     height: "100%",

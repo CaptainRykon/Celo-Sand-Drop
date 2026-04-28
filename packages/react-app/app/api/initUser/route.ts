@@ -10,18 +10,20 @@ function getMidnight() {
 export async function POST(req: Request) {
     try {
         const { wallet, username } = await req.json()
+        const walletKey = wallet?.trim()
+        const safeUsername = username?.trim()
 
-        if (!wallet || !username) {
+        if (!walletKey || !safeUsername) {
             return NextResponse.json({ error: "Invalid data" }, { status: 400 })
         }
 
-        const ref = db.ref(`users/${wallet}`)
+        const ref = db.ref(`users/${walletKey}`)
         const snap = await ref.get()
 
         // ? Only create if NOT exists
         if (!snap.exists()) {
-            await ref.update({
-                username,
+            await ref.set({
+                username: safeUsername,
                 chances: 1,
                 lastReset: getMidnight()
             })

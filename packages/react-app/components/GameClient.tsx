@@ -364,13 +364,23 @@ export default function Home() {
 
         const wallet = await getWallet()
 
-        await fetch("/api/addChances", {
+        const res = await fetch("/api/addChance", {
             method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
                 wallet,
                 amount: CHANCE_REWARD
             })
         })
+
+        const result = await res.json()
+
+        if (!res.ok || !result.success) {
+            sendToUnity("OnPurchaseFailed", result?.error || "FAILED")
+            return
+        }
 
         // 🔥 GET UPDATED USER DATA
         const updated = await getUser(wallet)

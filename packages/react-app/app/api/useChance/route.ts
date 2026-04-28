@@ -10,34 +10,41 @@ function getMidnight() {
 export async function POST(req: Request) {
     try {
         const { wallet } = await req.json()
+        const walletKey = wallet?.trim()
 
-        const ref = db.ref(`users/${wallet}`)
-        const snap = await ref.get()
-        if (!snap.exists()) {
-            await ref.set({
+        if (!walletKey) {
+            return NextResponse.json({ error: "Invalid wallet" }, { status: 400 })
+        }
+
+        const today = getMidnight()
+        const ref = db.ref(`users/${walletKey}`)
+
+        const result = await ref.transaction((current) => {
+            const data = current ?? {
                 username: "Guest",
                 chances: 1,
-                lastReset: getMidnight()
-            })
-        }
+                lastReset: today
+            }
 
-        let data = snap.val()
-        const today = getMidnight()
+            if ((data.lastReset ?? 0) < today) {
+                data.chances = 1
+                data.lastReset = today
+            }
 
-        // ?? DAILY RESET (MOVED TO BACKEND)
-        if (data.lastReset < today) {
-            data.chances = 1
-            data.lastReset = today
-        }
+            if ((data.chances ?? 0) <= 0) {
+                return
+            }
 
-        if (data.chances <= 0) {
+            return {
+                ...data,
+                chances: (data.chances ?? 0) - 1,
+                lastReset: data.lastReset ?? today
+            }
+        })
+
+        if (!result.committed || !result.snapshot.exists()) {
             return NextResponse.json({ success: false })
         }
-
-        await ref.update({
-            chances: data.chances - 1,
-            lastReset: data.lastReset
-        })
 
         return NextResponse.json({ success: true })
 

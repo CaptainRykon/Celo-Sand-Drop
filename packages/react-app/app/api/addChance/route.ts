@@ -5,12 +5,13 @@ export async function POST(req: Request) {
     try {
         const body = await req.json()
         const { wallet, amount } = body
+        const walletKey = wallet?.trim()
 
-        if (!wallet || typeof amount !== "number") {
+        if (!walletKey || typeof amount !== "number" || amount <= 0) {
             return NextResponse.json({ error: "Invalid data" }, { status: 400 })
         }
 
-        const ref = db.ref(`users/${wallet}`)
+        const ref = db.ref(`users/${walletKey}`)
         const snap = await ref.get()
 
         if (!snap.exists()) {

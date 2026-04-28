@@ -12,6 +12,14 @@ const USDT: Address = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"
 export default function Home() {
 
     const userLoaded = useRef(false)
+    const unityFullyReady = useRef(false)
+    useEffect(() => {
+        (window as any).UnityReady = () => {
+            console.log("✅ Unity is READY")
+            unityFullyReady.current = true
+        }
+    }, [])
+
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
@@ -87,7 +95,8 @@ export default function Home() {
         }
 
     }, [])
-    
+
+
     // =========================
     // ?? PAYMENT FUNCTION
     // =========================
@@ -618,9 +627,7 @@ export default function Home() {
     function waitForUnityReady(): Promise<void> {
         return new Promise((resolve) => {
             const check = () => {
-                const iframe: any = document.querySelector("iframe")
-                if (iframe && iframe.contentWindow) {
-                    unityReady = true
+                if (unityFullyReady.current) {
                     resolve()
                 } else {
                     setTimeout(check, 100)
@@ -630,11 +637,12 @@ export default function Home() {
         })
     }
 
+
     // =========================
     // ?? SEND BACK TO UNITY
     // =========================
     async function sendToUnity(method: string, value: string) {
-        if (!unityReady) {
+        if (!unityFullyReady.current) {
             await waitForUnityReady()
         }
 

@@ -7,24 +7,16 @@ function getNextMidnight() {
     return d.getTime()
 }
 
-// ✅ GET USER (READ ONLY)
 export async function getUser(wallet: string) {
-    await initFirebase()
+    const res = await fetch("/api/getUser", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ wallet })
+    })
 
-    const { db, authReady } = getFirebase()
-    await authReady
-
-    const userRef = ref(db, `users/${wallet}`)
-    const snap = await get(userRef)
-
-    if (!snap.exists()) return null
-
-    const data = snap.val()
-
-    return {
-        ...data,
-        nextReset: getNextMidnight()
-    }
+    return await res.json()
 }
 
 // ✅ INIT USER (API)

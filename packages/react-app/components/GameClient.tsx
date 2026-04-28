@@ -43,31 +43,56 @@ export default function Home() {
         }
 
         const handleUnityMessage = async (event: any) => {
-            const data = event.data
-            if (!data) return
+            console.log("📥 RAW MESSAGE:", event.data)
+
+            let data = event.data
+
+            // 🔥 normalize (important for WebView)
+            if (typeof data === "string") {
+                try {
+                    data = JSON.parse(data)
+                } catch {
+                    return
+                }
+            }
+
+            if (!data || !data.type) {
+                console.log("❌ Invalid message:", data)
+                return
+            }
+
+            console.log("✅ MESSAGE TYPE:", data.type)
 
             switch (data.type) {
+                case "UNITY_GET_USER":
+                    console.log("🔥 UNITY_GET_USER RECEIVED")
+                    await handleGetUser()
+                    break
+
                 case "UNITY_PAY_ENTRY":
                     await handlePayment()
                     break
+
                 case "UNITY_SAVE_SCORE":
                     await handleSaveScore(data)
                     break
+
                 case "UNITY_GET_LEADERBOARD":
                     await handleGetLeaderboard(data)
                     break
+
                 case "UNITY_INIT_USER":
                     await handleInitUser(data)
                     break
-                case "UNITY_GET_USER":
-                    await handleGetUser()
-                    break
+
                 case "UNITY_USE_CHANCE":
                     await handleUseChance()
                     break
+
                 case "UNITY_BUY_CHANCES":
                     await handleBuyChances()
                     break
+
                 case "UNITY_UPDATE_USERNAME":
                     await handleUpdateUsername(data)
                     break
@@ -660,7 +685,7 @@ export default function Home() {
             overflow: "hidden"
         }}>
             <iframe
-                src="https://pub-c1bbac41ac1d4d64888b58940fa79bfc.r2.dev/public/game/index.html"
+                src="https://pub-f34895d21da746a58e8fd38591dd5e54.r2.dev/public/game/index.html"
                 style={{
                     width: "100%",
                     height: "100%",

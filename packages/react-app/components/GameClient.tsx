@@ -642,7 +642,10 @@ export default function Home() {
     // ?? SEND BACK TO UNITY
     // =========================
     async function sendToUnity(method: string, value: string) {
+        console.log("📤 Sending to Unity:", method, value)
+
         if (!unityFullyReady.current) {
+            console.log("⏳ Waiting for Unity...")
             await waitForUnityReady()
         }
 

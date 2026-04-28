@@ -8,7 +8,7 @@ function getNextMidnight() {
 }
 
 export async function getUser(wallet: string) {
-    if (!wallet) return null // 🚨 ADD THIS
+    if (!wallet) return null
 
     const res = await fetch("/api/getUser", {
         method: "POST",
@@ -17,6 +17,11 @@ export async function getUser(wallet: string) {
         },
         body: JSON.stringify({ wallet })
     })
+
+    if (!res.ok) {
+        console.error("getUser API failed")
+        return null
+    }
 
     return await res.json()
 }

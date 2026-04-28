@@ -12,7 +12,9 @@ export async function POST(req: Request) {
         const snap = await db.ref(`users/${wallet}`).get()
 
         if (!snap.exists()) {
-            return NextResponse.json(null)
+            return NextResponse.json({
+                exists: false
+            })
         }
 
         const data = snap.val()

@@ -272,6 +272,8 @@ export default function Home() {
     }
 
     async function handleGetUser() {
+        await waitForUnityReady()
+
         const wallet = await getWalletSafe()
 
         // 🚀 ALWAYS RESPOND — NEVER BLOCK UNITY
@@ -611,12 +613,30 @@ export default function Home() {
            
         }
     }
+    let unityReady = false
+
+    function waitForUnityReady(): Promise<void> {
+        return new Promise((resolve) => {
+            const check = () => {
+                const iframe: any = document.querySelector("iframe")
+                if (iframe && iframe.contentWindow) {
+                    unityReady = true
+                    resolve()
+                } else {
+                    setTimeout(check, 100)
+                }
+            }
+            check()
+        })
+    }
 
     // =========================
     // ?? SEND BACK TO UNITY
     // =========================
-    function sendToUnity(method: string, value: string) {
-        if (typeof window === "undefined") return; // ✅ FIX
+    async function sendToUnity(method: string, value: string) {
+        if (!unityReady) {
+            await waitForUnityReady()
+        }
 
         const iframe: any = document.querySelector("iframe")
 
@@ -640,7 +660,7 @@ export default function Home() {
             overflow: "hidden"
         }}>
             <iframe
-                src="https://pub-f32ebedee056496abdaeeda59cd33f35.r2.dev/public/game/index.html"
+                src="https://pub-ecb2e17161e6467ea47ed9cf54acfc47.r2.dev/public/game/index.html"
                 style={{
                     width: "100%",
                     height: "100%",

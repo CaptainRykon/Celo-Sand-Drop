@@ -8,6 +8,8 @@ function getNextMidnight() {
 }
 
 export async function getUser(wallet: string) {
+    if (!wallet) return null // 🚨 ADD THIS
+
     const res = await fetch("/api/getUser", {
         method: "POST",
         headers: {
@@ -63,3 +65,4 @@ export async function addChances(wallet: string, amount: number) {
 
     return await res.json()
 }
+

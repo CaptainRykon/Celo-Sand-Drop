@@ -259,25 +259,25 @@ export default function Home() {
         try {
             const accounts = await (window as any).ethereum.request({
                 method: "eth_accounts"
-            }) as Address[]
+            })
 
             if (!accounts || accounts.length === 0) {
-                return null // ❗ NO POPUP
+                return null // 🚀 DO NOT BLOCK
             }
 
             return accounts[0]
-        } catch (e) {
-            console.log("getWalletSafe error:", e)
+        } catch {
             return null
         }
     }
 
     async function handleGetUser() {
-        const wallet = await getWallet() // FORCE CONNECT
+        const wallet = await getWalletSafe()
 
+        // 🚀 ALWAYS RESPOND — NEVER BLOCK UNITY
         if (!wallet) {
             sendToUnity("OnUserData", JSON.stringify({
-                username: "Guest",
+                username: localStorage.getItem("username") || "Guest",
                 chances: 1,
                 nextReset: Date.now() + 86400000
             }))
@@ -286,38 +286,20 @@ export default function Home() {
 
         let data = await getUser(wallet)
 
-        // 🔥 TRY INIT BUT DO NOT TRUST IT
         if (!data) {
-            try {
-                await fetch("/api/initUser", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        wallet,
-                        username: localStorage.getItem("username") || "Guest"
-                    })
+            await fetch("/api/initUser", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    wallet,
+                    username: localStorage.getItem("username") || "Guest"
                 })
-            } catch (e) {
-                console.log("initUser failed", e)
-            }
+            })
 
-            // 🔥 RETRY WITH LIMIT
-            for (let i = 0; i < 3; i++) {
-                await new Promise(r => setTimeout(r, 200))
-                data = await getUser(wallet)
-                if (data) break
-            }
+            data = await getUser(wallet)
         }
 
-        // 🔥 ALWAYS SEND FALLBACK
-        if (!data) {
-            data = {
-                username: "Guest",
-                chances: 1,
-                nextReset: Date.now() + 86400000
-            }
-        }
-
+        // 🚀 ALWAYS SEND
         sendToUnity("OnUserData", JSON.stringify(data))
     }
 

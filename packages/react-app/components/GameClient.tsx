@@ -21,21 +21,7 @@ export default function Home() {
     }, [])
 
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => {
-        initFirebase()
 
-        const preload = async () => {
-            try {
-                await handleGetUser()
-            } catch (e) {
-                console.log("Preload failed:", e)
-            }
-        }
-
-        preload()
-
-    }, [])
 
     useEffect(() => {
         const ethereum = getEthereum()
@@ -283,37 +269,40 @@ export default function Home() {
     async function handleGetUser() {
         await waitForUnityReady()
 
-        const wallet = await getWalletSafe()
+        console.log("📥 Unity requested user")
 
-        // 🚀 ALWAYS RESPOND — NEVER BLOCK UNITY
-        if (!wallet) {
+        try {
+            const wallet = await getWalletSafe()
+
+            let data = null
+
+            if (wallet) {
+                data = await getUser(wallet)
+            }
+
+            if (!data) {
+                data = {
+                    username: localStorage.getItem("username") || "Guest",
+                    chances: 1,
+                    nextReset: Date.now() + 86400000
+                }
+            }
+
+            console.log("📤 Sending user data:", data)
+
+            sendToUnity("OnUserData", JSON.stringify(data))
+
+        } catch (err) {
+            console.error("❌ handleGetUser error:", err)
+
+            // 🔥 ALWAYS SEND SOMETHING (NEVER BLOCK UNITY)
             sendToUnity("OnUserData", JSON.stringify({
-                username: localStorage.getItem("username") || "Guest",
+                username: "Guest",
                 chances: 1,
                 nextReset: Date.now() + 86400000
             }))
-            return
         }
-
-        let data = await getUser(wallet)
-
-        if (!data) {
-            await fetch("/api/initUser", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    wallet,
-                    username: localStorage.getItem("username") || "Guest"
-                })
-            })
-
-            data = await getUser(wallet)
-        }
-
-        // 🚀 ALWAYS SEND
-        sendToUnity("OnUserData", JSON.stringify(data))
     }
-
 
     async function handleUseChance() {
         const wallet = await getWallet()

@@ -273,7 +273,7 @@ export default function Home() {
     }
 
     async function handleGetUser() {
-        const wallet = await getWalletSafe()
+        const wallet = await getWallet() // FORCE CONNECT
 
         if (!wallet) {
             sendToUnity("OnUserData", JSON.stringify({

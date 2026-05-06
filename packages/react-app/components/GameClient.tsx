@@ -312,15 +312,9 @@ export default function Home() {
     async function handleUseChance() {
         const wallet = await getWallet()
 
-        const res = await fetch("/api/useChance", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ wallet })
-        })
+        const updated = await consumeChance(wallet)
 
-        const result = await res.json()
-
-        if (!result.success) {
+        if (!updated) {
             sendToUnity("OnChanceUsed", "0")
             return
         }
@@ -328,8 +322,6 @@ export default function Home() {
         // ✅ IMMEDIATE SUCCESS SIGNAL
         sendToUnity("OnChanceUsed", "1")
 
-        // THEN sync data
-        const updated = await getUser(wallet)
         sendToUnity("OnUserData", JSON.stringify(updated))
     }
 
@@ -350,30 +342,15 @@ export default function Home() {
         if (!success) return
 
         const wallet = await getWallet()
+        const result = await addChances(wallet, CHANCE_REWARD)
 
-        const res = await fetch("/api/addChance", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                wallet,
-                amount: CHANCE_REWARD
-            })
-        })
-
-        const result = await res.json()
-
-        if (!res.ok || !result.success) {
+        if (!result?.success) {
             sendToUnity("OnPurchaseFailed", result?.error || "FAILED")
             return
         }
 
-        // 🔥 GET UPDATED USER DATA
-        const updated = await getUser(wallet)
-
         // 🔥 SEND FULL DATA
-        sendToUnity("OnUserData", JSON.stringify(updated))
+        sendToUnity("OnUserData", JSON.stringify(result.user))
 
         // ✅ NEW
         sendToUnity("OnPurchaseSuccess", "")
@@ -516,14 +493,12 @@ export default function Home() {
     async function handleUpdateUsername(data: any) {
         const wallet = await getWallet()
 
-        await updateUsername(wallet, data.username)
+        const result = await updateUsername(wallet, data.username)
 
         // 🔥 SAVE LOCALLY (CRITICAL)
         localStorage.setItem("username", data.username)
 
-        const updated = await getUser(wallet)
-
-        sendToUnity("OnUserData", JSON.stringify(updated))
+        sendToUnity("OnUserData", JSON.stringify(result?.user))
     }
 
 

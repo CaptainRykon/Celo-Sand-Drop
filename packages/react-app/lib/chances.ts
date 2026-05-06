@@ -1,12 +1,3 @@
-﻿import { ref, get } from "firebase/database"
-import { initFirebase, getFirebase } from "./firebase"
-
-function getNextMidnight() {
-    const d = new Date()
-    d.setHours(24, 0, 0, 0)
-    return d.getTime()
-}
-
 export async function getUser(wallet: string) {
     if (!wallet) return null
 
@@ -26,7 +17,6 @@ export async function getUser(wallet: string) {
     return await res.json()
 }
 
-// ✅ INIT USER (API)
 export async function initUser(wallet: string, username: string) {
     await fetch("/api/initUser", {
         method: "POST",
@@ -35,7 +25,6 @@ export async function initUser(wallet: string, username: string) {
     })
 }
 
-// ✅ USE CHANCE (API)
 export async function consumeChance(wallet: string) {
     const res = await fetch("/api/useChance", {
         method: "POST",
@@ -47,20 +36,19 @@ export async function consumeChance(wallet: string) {
 
     if (!data.success) return null
 
-    // 🔥 ALWAYS REFETCH AFTER UPDATE
-    return await getUser(wallet)
+    return data.user ?? null
 }
 
-// ✅ UPDATE USERNAME (API)
 export async function updateUsername(wallet: string, username: string) {
-    await fetch("/api/updateUsername", {
+    const res = await fetch("/api/updateUsername", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wallet, username })
     })
+
+    return await res.json()
 }
 
-// ✅ ADD CHANCES (API)
 export async function addChances(wallet: string, amount: number) {
     const res = await fetch("/api/addChance", {
         method: "POST",
@@ -70,4 +58,3 @@ export async function addChances(wallet: string, amount: number) {
 
     return await res.json()
 }
-

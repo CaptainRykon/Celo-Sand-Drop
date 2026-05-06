@@ -239,15 +239,12 @@ export default function Home() {
     async function handleUseChance() {
         const wallet = await getWallet()
 
-        const success = await consumeChance(wallet)
+        const updated = await consumeChance(wallet)
 
-        if (!success) {
+        if (!updated) {
             sendToUnity("OnChanceUsed", "0")
             return
         }
-
-        // 🔥 GET UPDATED USER DATA
-        const updated = await getUser(wallet)
 
         // 🔥 SEND FULL DATA BACK TO UNITY
         sendToUnity("OnUserData", JSON.stringify(updated))
@@ -271,10 +268,7 @@ export default function Home() {
 
         const wallet = await getWallet()
 
-        await addChances(wallet, CHANCE_REWARD)
-
-        // 🔥 GET UPDATED USER DATA
-        const updated = await getUser(wallet)
+        const updated = await addChances(wallet, CHANCE_REWARD)
 
         // 🔥 SEND FULL DATA
         sendToUnity("OnUserData", JSON.stringify(updated))
@@ -408,10 +402,7 @@ export default function Home() {
     async function handleUpdateUsername(data: any) {
         const wallet = await getWallet()
 
-        await updateUsername(wallet, data.username)
-
-        // 🔥 Send updated data back
-        const updated = await getUser(wallet)
+        const updated = await updateUsername(wallet, data.username)
 
         sendToUnity("OnUserData", JSON.stringify(updated))
     }

@@ -1,4 +1,4 @@
-import { ref, get, set } from "firebase/database"
+import { ref, get, query, orderByChild, limitToLast, runTransaction } from "firebase/database"
 import { initFirebase, getFirebase } from "./firebase"
 
 export async function saveScore(
@@ -13,25 +13,18 @@ export async function saveScore(
   await authReady
 
   const userRef = ref(db, `leaderboards/${gameName}/${wallet}`)
-  const snapshot = await get(userRef)
 
-  if (snapshot.exists()) {
-    const existing = snapshot.val()
-
-    if (score > existing.score) {
-      await set(userRef, {
+  await runTransaction(userRef, (current) => {
+    if (!current || score > current.score) {
+      return {
         username,
         score,
         timestamp: Date.now(),
-      })
+      }
     }
-  } else {
-    await set(userRef, {
-      username,
-      score,
-      timestamp: Date.now(),
-    })
-  }
+
+    return current
+  })
 }
 
 export async function getLeaderboard(gameName: string) {
@@ -40,13 +33,16 @@ export async function getLeaderboard(gameName: string) {
   const { db, authReady } = getFirebase()
   await authReady
 
-  const snapshot = await get(ref(db, `leaderboards/${gameName}`))
+  const leaderboardQuery = query(
+    ref(db, `leaderboards/${gameName}`),
+    orderByChild("score"),
+    limitToLast(50)
+  )
+  const snapshot = await get(leaderboardQuery)
 
   if (!snapshot.exists()) return []
 
   const data = snapshot.val()
 
-  return Object.values(data)
-    .sort((a: any, b: any) => b.score - a.score)
-    .slice(0, 50)
+  return Object.values(data).sort((a: any, b: any) => b.score - a.score)
 }
